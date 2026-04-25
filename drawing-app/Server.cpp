@@ -2,7 +2,7 @@
 
 std::mutex userListMutex;
 
-Server::Server()
+Server::Server(RequestHandlerFactory& factory) : m_handlerFactory(factory)
 {
 	WSADATA wsaData;
 	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
