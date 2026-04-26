@@ -9,8 +9,14 @@ struct RequestInfo
 	Buffer buffer;
 };
 
+struct LoginRequest
+{
+	std::string username;
+	std::string password;
+};
+
 class IRequestHandler
 {
-	virtual bool isRequestRelevant(RequestInfo& req) = 0;
-	virtual RequestResult handlerRequest(RequestInfo& req) = 0;
+	virtual bool isRequestRelevant(RequestInfo& info) = 0;
+	virtual RequestResult handlerRequest(RequestInfo& info) = 0;
 };

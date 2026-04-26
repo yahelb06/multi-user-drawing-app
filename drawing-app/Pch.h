@@ -3,8 +3,9 @@
 
 enum class MessageCode : char
 {
+	ERROR_CODE = 90,
 	LOGIN_REQUEST = 100,
-	SIGNUP_REQUEST = 110,
+	SIGNUP_REQUEST = 110
 };
 
 #define PORT 8826
