@@ -9,6 +9,24 @@ struct RequestInfo
 	Buffer buffer;
 };
 
+struct LoginRequest
+{
+	std::string username;
+	std::string password;
+};
+
+struct SignUpRequest
+{
+	std::string username;
+	std::string password;
+	std::string mail;
+};
+
+struct RemoveUserRequest
+{
+	std::string username;
+};
+
 class IRequestHandler
 {
 	virtual bool isRequestRelevant(RequestInfo& req) = 0;

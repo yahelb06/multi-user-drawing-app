@@ -3,12 +3,15 @@
 
 enum class MessageCode : char
 {
+	ERROR_CODE = 90,
 	LOGIN_REQUEST = 100,
 	SIGNUP_REQUEST = 110,
+	REMOVE_USER = 120
 };
 
 #define PORT 8826
 #define BUFFER_SIZE 1024
+#define DB_FILE_NAME "DB.sqlite"
 
 #pragma comment(lib, "ws2_32.lib")
 #include <iostream>
@@ -21,6 +24,8 @@ enum class MessageCode : char
 #include <map>
 #include <stdexcept>
 #include <exception>
+#include <io.h>
+#include <algorithm>
 
 typedef std::vector<unsigned char> Buffer;
 
