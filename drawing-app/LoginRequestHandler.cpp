@@ -7,25 +7,33 @@ LoginRequestHandler::LoginRequestHandler(LoginManager& loginManager, RequestHand
 
 bool LoginRequestHandler::isRequestRelevant(RequestInfo& info)
 {
-    return (info.id == char(MessageCode::LOGIN_REQUEST) || info.id == char(MessageCode::SIGNUP_REQUEST));
+    MessageCode code = static_cast<MessageCode>(info.id);
+    return (code == MessageCode::LOGIN_REQUEST ||
+        code == MessageCode::REMOVE_USER ||
+        code == MessageCode::SIGNUP_REQUEST);
 }
 
 RequestResult LoginRequestHandler::handlerRequest(RequestInfo& info)
 {
     RequestResult res;
+    MessageCode code = static_cast<MessageCode>(info.id);
     if (!isRequestRelevant(info))
     {
         ErrResponse err;
         err.message = "Request failed, Illegal message code.";
         res.response = JsonResponsePacketSerializer::serializeResponse(err);
     }
-    else if (info.id == char(MessageCode::LOGIN_REQUEST))
+    else if (code == MessageCode::LOGIN_REQUEST)
     {
         res = Login(info);
     }
-    else if (info.id == char(MessageCode::SIGNUP_REQUEST))
+    else if (code == MessageCode::SIGNUP_REQUEST)
     {
         res = SignUp(info);
+    }
+    else if (code == MessageCode::REMOVE_USER)
+    {
+        res = Remove(info);
     }
     return res;
 }
@@ -34,20 +42,19 @@ RequestResult LoginRequestHandler::Login(RequestInfo& info)
 {
     RequestResult res;
 
-    Buffer buffer;
-    buffer.insert(buffer.begin(), info.buffer.begin(), info.buffer.end());
-    LoginRequest req = JsonRequestPacketDeserializer::deserializeLoginRequest(buffer);
-    
-    LoginResponse login;
-    login.status = unsigned int(this->m_loginManager.login(req.username, req.password));
+    LoginRequest req = JsonRequestPacketDeserializer::deserializeLoginRequest(info.buffer);
 
-    if (login.status == unsigned int(LoginStatus::LOGIN_SUCCESS))
+    LoginStatus status = static_cast<LoginStatus>(this->m_loginManager.login(req.username, req.password));
+
+    if (status == LoginStatus::LOGIN_SUCCESS)
     {
+        LoginResponse login;
+        login.status = static_cast<unsigned int>(status);
         res.response = JsonResponsePacketSerializer::serializeResponse(login);
         res.newHandler = nullptr;
         //res.newHandler = menu...
     }
-    else if(login.status == unsigned int(LoginStatus::LOGIN_FAILED))
+    else if (status == LoginStatus::LOGIN_FAILED)
     {
         ErrResponse err;
         err.message = "Login failed. Please try again.";
@@ -68,19 +75,19 @@ RequestResult LoginRequestHandler::SignUp(RequestInfo& info)
 {
     RequestResult res;
 
-    Buffer buffer;
-    buffer.insert(buffer.begin(), info.buffer.begin(), info.buffer.end());
-
-    SignUpRequest req = JsonRequestPacketDeserializer::deserializeSignUpRequest(buffer);
-    SignUpResponse signUp;
-    signUp.status = unsigned int(this->m_loginManager.signup(req.username, req.password, req.mail));
-    if (signUp.status == unsigned int(SignUpStatus::SIGNUP_SUCCESS))
+    SignUpRequest req = JsonRequestPacketDeserializer::deserializeSignUpRequest(info.buffer);
+    
+    SignUpStatus status;
+    status = static_cast<SignUpStatus>(this->m_loginManager.signup(req.username, req.password, req.mail));
+    if (status == SignUpStatus::SIGNUP_SUCCESS)
     {
+        SignUpResponse signUp;
+        signUp.status = static_cast<unsigned int>(status);
         res.response = JsonResponsePacketSerializer::serializeResponse(signUp);
         res.newHandler = nullptr;
         //res.newHandler = menu
     }
-    else if (signUp.status == unsigned int(SignUpStatus::USER_ALREADY_EXISTS))
+    else if (status == SignUpStatus::USER_ALREADY_EXISTS)
     {
         ErrResponse err;
         err.message = "There is already user with this name. Please try other name.";
@@ -101,19 +108,19 @@ RequestResult LoginRequestHandler::Remove(RequestInfo& info)
 {
     RequestResult res;
 
-    Buffer buffer;
-    buffer.insert(buffer.end(), info.buffer.begin(), info.buffer.begin());
+    RemoveUserRequest req = JsonRequestPacketDeserializer::deserializeRemoveUserRequest(info.buffer);
+    
+    RemoveStatus status;
+    status = static_cast<RemoveStatus>(this->m_loginManager.Remove(req.username));
 
-    RemoveUserRequest req = JsonRequestPacketDeserializer::deserializeRemoveUserRequest(buffer);
-    RemoveUserResponse remove;
-    remove.status = unsigned int(this->m_loginManager.Remove(req.username));
-
-    if (remove.status == unsigned int(RemoveStatus::REMOVE_SUCCESS))
+    if (status == RemoveStatus::REMOVE_SUCCESS)
     {
+        RemoveUserResponse remove;
+        remove.status = static_cast<unsigned int>(status);
         res.response = JsonResponsePacketSerializer::serializeResponse(remove);
         res.newHandler = this->m_handlerFactory.CreateLoginRequest();
     }
-    else if (remove.status == unsigned int(RemoveStatus::USER_NOT_FOUND))
+    else if (status == RemoveStatus::USER_NOT_FOUND)
     {
         ErrResponse err;
         err.message = "User not found.";

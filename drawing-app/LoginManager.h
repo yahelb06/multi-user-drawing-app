@@ -30,11 +30,14 @@ public:
 	LoginManager(IDatabase* m_database);
 	LoginStatus login(const std::string& name, const std::string& pass);
 	SignUpStatus signup(const std::string& name, const std::string& pass, const std::string& mail);
-	void logout(std::string& name);
+	void logout(const std::string& name);
 	RemoveStatus Remove(const std::string& name);
 
 private:
 	bool isUserLoggedIn(const std::string& name) const;
+	void privateLogout(const std::string& name);
+
+	mutable std::mutex _loggedUser_mutex;
 	IDatabase* m_database;
 	std::vector<LoggedUser> m_loggedUsers;
 };

@@ -8,13 +8,14 @@ LoginStatus LoginManager::login(const std::string& name, const std::string& pass
 {
     try
     {
-        if (!this->isUserLoggedIn(name))
-        {
-            return LoginStatus::USER_ALREADY_LOGGED_IN;
-        }
-        else if (!this->m_database->doesPasswordMatch(name, pass))
+        if (!this->m_database->doesPasswordMatch(name, pass))
         {
             return LoginStatus::LOGIN_FAILED;
+        }
+        std::lock_guard<std::mutex> lock(this->_loggedUser_mutex);
+        if (this->isUserLoggedIn(name))
+        {
+            return LoginStatus::USER_ALREADY_LOGGED_IN;
         }
         LoggedUser newUser(name);
         this->m_loggedUsers.push_back(newUser);
@@ -30,14 +31,15 @@ SignUpStatus LoginManager::signup(const std::string& name, const std::string& pa
 {
     try
     {
-        if (this->m_database->doesUserExist(name))
+        if (this->m_database->addNewUser(name, pass, mail))
         {
-            return SignUpStatus::USER_ALREADY_EXISTS;
+            LoggedUser newUser(name);
+            std::lock_guard<std::mutex> lock(this->_loggedUser_mutex);
+            this->m_loggedUsers.push_back(newUser);
+            return SignUpStatus::SIGNUP_SUCCESS;
         }
-        this->m_database->addNewUser(name, pass, mail);
-        LoggedUser newUser(name);
-        this->m_loggedUsers.push_back(newUser);
-        SignUpStatus::SIGNUP_SUCCESS;
+        //no user added
+        return SignUpStatus::USER_ALREADY_EXISTS;
     }
     catch (...)
     {
@@ -45,25 +47,25 @@ SignUpStatus LoginManager::signup(const std::string& name, const std::string& pa
     }
 }
 
-void LoginManager::logout(std::string& name)
+void LoginManager::logout(const std::string& name)
 {
-    LoggedUser userToRemove(name);
-    auto it = std::remove(m_loggedUsers.begin(), m_loggedUsers.end(), userToRemove);
-    this->m_loggedUsers.erase(it, this->m_loggedUsers.end());
+    std::lock_guard<std::mutex> lock(this->_loggedUser_mutex);
+    this->privateLogout(name);
 }
 
 RemoveStatus LoginManager::Remove(const std::string& name)
 {
     try
     {
-        if (!this->isUserLoggedIn(name))
+        std::lock_guard<std::mutex> lock(this->_loggedUser_mutex);
+        //user deleted
+        if (this->m_database->deleteUser(name))
         {
-            return RemoveStatus::USER_NOT_FOUND;
+            this->privateLogout(name);
+            return RemoveStatus::REMOVE_SUCCESS;
         }
-        this->m_database->deleteUser(name);
-        LoggedUser userToRemove(name);
-        auto it = std::remove(m_loggedUsers.begin(), m_loggedUsers.end(), userToRemove);
-        this->m_loggedUsers.erase(it, this->m_loggedUsers.end());
+        //no user deleted
+        return RemoveStatus::USER_NOT_FOUND;
     }
     catch (...)
     {
@@ -83,4 +85,11 @@ bool LoginManager::isUserLoggedIn(const std::string& name) const
         return true;
     }
     return false;
+}
+
+void LoginManager::privateLogout(const std::string& name)
+{
+    LoggedUser userToRemove(name);
+    auto it = std::remove(m_loggedUsers.begin(), m_loggedUsers.end(), userToRemove);
+    this->m_loggedUsers.erase(it, this->m_loggedUsers.end());
 }

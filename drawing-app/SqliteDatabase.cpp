@@ -12,6 +12,7 @@ SqliteDatabase::~SqliteDatabase()
 
 bool SqliteDatabase::open()
 {
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
 	const int FILE_DONT_EXIST = -1;
 	int fileExist = _access(DB_FILE_NAME, 0);
 	char* errMessage = nullptr;
@@ -44,12 +45,15 @@ bool SqliteDatabase::open()
 
 void SqliteDatabase::close()
 {
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
 	sqlite3_close(this->_db);
 	this->_db = nullptr;
 }
 
+/*
 bool SqliteDatabase::doesUserExist(const std::string& name) const
 {
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
 	sqlite3_stmt* stmt;
 	std::string sqlStatement = "SELECT * FROM USERS "
 		"WHERE NAME = ?;";
@@ -71,9 +75,11 @@ bool SqliteDatabase::doesUserExist(const std::string& name) const
 	sqlite3_finalize(stmt);
 	return false;
 }
+*/
 
 bool SqliteDatabase::doesPasswordMatch(const std::string& name, const std::string& pass) const
 {
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
 	sqlite3_stmt* stmt;
 	std::string sqlStatement = "SELECT * FROM USERS "
 		"WHERE NAME = ? AND PASSWORD = ?;";
@@ -95,8 +101,9 @@ bool SqliteDatabase::doesPasswordMatch(const std::string& name, const std::strin
 	return false;
 }
 
-void SqliteDatabase::addNewUser(const std::string& name, const std::string& pass, const std::string& mail)
+bool SqliteDatabase::addNewUser(const std::string& name, const std::string& pass, const std::string& mail)
 {
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
 	sqlite3_stmt* stmt;
 	std::string sqlStatement = "INSERT INTO USERS (NAME, PASSWORD, MAIL) "
 		"VALUES(?, ?, ?);";
@@ -110,21 +117,20 @@ void SqliteDatabase::addNewUser(const std::string& name, const std::string& pass
 	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, pass.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 3, mail.c_str(), -1, SQLITE_STATIC);
-	if (sqlite3_step(stmt) == SQLITE_DONE)
-	{
-		sqlite3_finalize(stmt);
-	}
-	else
+	if (sqlite3_step(stmt) != SQLITE_DONE)
 	{
 		sqlite3_finalize(stmt);
 		throw (sqlite3_errmsg(this->_db));
 	}
+	//if changes happend
+	return (sqlite3_changes(this->_db) > 0);
 }
 
-void SqliteDatabase::deleteUser(const std::string& name)
+bool SqliteDatabase::deleteUser(const std::string& name)
 {
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
 	sqlite3_stmt* stmt;
-	std::string sqlStatement = "REMOVE FROM USERS "
+	std::string sqlStatement = "DELETE FROM USERS "
 		"WHERE NAME = ?;";
 	int res = sqlite3_prepare_v2(this->_db, sqlStatement.c_str(), -1, &stmt, nullptr);
 
@@ -134,13 +140,11 @@ void SqliteDatabase::deleteUser(const std::string& name)
 		throw (std::string(sqlite3_errmsg(this->_db)));
 	}
 	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
-	if (sqlite3_step(stmt) == SQLITE_ROW)
-	{
-		sqlite3_finalize(stmt);
-	}
-	else
+	if (sqlite3_step(stmt) != SQLITE_DONE)
 	{
 		sqlite3_finalize(stmt);
 		throw(sqlite3_errmsg(this->_db));
 	}
+	//if changes happend
+	return (sqlite3_changes(this->_db) > 0);
 }

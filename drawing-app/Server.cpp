@@ -1,6 +1,5 @@
 #include "Server.h"
 
-std::mutex userListMutex;
 
 Server::Server(RequestHandlerFactory& factory) : m_handlerFactory(factory)
 {
@@ -73,7 +72,7 @@ void Server::handleNewClient()
 	std::cout << "Client accepted. Server and client can speak" << std::endl;
 	{
 		std::lock_guard<std::mutex> lock(userListMutex);
-		this->m_client[client_socket] = m_handlerFactory.createLoginRequestHandler();
+		this->m_client[client_socket] = m_handlerFactory.CreateLoginRequest();
 	}
 	// the function that handle the conversation with the client
 	std::thread t(&Server::clientHandler, this, client_socket);
@@ -82,8 +81,52 @@ void Server::handleNewClient()
 
 void Server::clientHandler(SOCKET clientSocket)
 {
-	char buffer[BUFFER_SIZE];
-	int userMsgSize = recv(clientSocket, buffer, BUFFER_SIZE, 0);
-	buffer[userMsgSize] = '\0';
+	//one extra index
+	char buffer[BUFFER_SIZE + 1];
+	int size = 0;
+	std::string users;
+	std::string name;
+	int userMsgSize;
+	IRequestHandler* handler = nullptr;
+	try
+	{
+		while (true)
+		{
+			userMsgSize = recv(clientSocket, buffer, BUFFER_SIZE, 0);
+			if (userMsgSize <= 5 || userMsgSize >= BUFFER_SIZE)
+			{
+				throw std::exception();
+			}
+			buffer[userMsgSize] = '\0';
+			Buffer vecBuffer;
+			vecBuffer.insert(vecBuffer.begin(), buffer + START_OF_DATA, buffer + userMsgSize);
+			for (auto& a : vecBuffer)
+			{
+				std::cout << a;
+			}
+			std::cout << "\n";
+			RequestInfo info = { buffer[0], time_t(), vecBuffer };
+			{
+				std::lock_guard<std::mutex> lock(userListMutex);
+				handler = m_client[clientSocket];
+			}
+			RequestResult res = handler->handlerRequest(info);
 
+			send(clientSocket, reinterpret_cast<const char*>(res.response.data()), res.response.size(), 0);
+		
+		}
+	}
+	catch (const nlohmann::json::parse_error& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
+	catch (const nlohmann::json::out_of_range& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << "Client socket closed" << std::endl;
+		closesocket(clientSocket);
+	}
 }

@@ -29,6 +29,8 @@ struct RemoveUserRequest
 
 class IRequestHandler
 {
+public:
+
 	virtual bool isRequestRelevant(RequestInfo& req) = 0;
 	virtual RequestResult handlerRequest(RequestInfo& req) = 0;
 };
