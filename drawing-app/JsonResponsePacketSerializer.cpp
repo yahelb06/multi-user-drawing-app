@@ -67,3 +67,15 @@ Buffer JsonResponsePacketSerializer::serializeResponse(LogOutResponse& res)
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
     return buffer;
 }
+
+Buffer JsonResponsePacketSerializer::serializeResponse(CreateRoomResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::CREATE_ROOM));
+    nlohmann::json data;
+    data["Status"] = res.status;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}

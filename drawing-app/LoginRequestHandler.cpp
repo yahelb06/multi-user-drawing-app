@@ -5,6 +5,10 @@ LoginRequestHandler::LoginRequestHandler( RequestHandlerFactory& handlerFactory)
 {
 }
 
+LoginRequestHandler::~LoginRequestHandler()
+{
+}
+
 bool LoginRequestHandler::isRequestRelevant(RequestInfo& info)
 {
     MessageCode code = static_cast<MessageCode>(info.id);
@@ -15,27 +19,26 @@ bool LoginRequestHandler::isRequestRelevant(RequestInfo& info)
 
 RequestResult LoginRequestHandler::handlerRequest(RequestInfo& info)
 {
-    RequestResult res;
     MessageCode code = static_cast<MessageCode>(info.id);
     if (!isRequestRelevant(info))
     {
+        RequestResult res;
         ErrResponse err;
         err.message = "Request failed, Illegal message code.";
         res.response = JsonResponsePacketSerializer::serializeResponse(err);
     }
     else if (code == MessageCode::LOGIN_REQUEST)
     {
-        res = Login(info);
+        return Login(info);
     }
     else if (code == MessageCode::SIGNUP_REQUEST)
     {
-        res = SignUp(info);
+        return SignUp(info);
     }
     else if (code == MessageCode::REMOVE_USER)
     {
-        res = Remove(info);
+        return Remove(info);
     }
-    return res;
 }
 
 RequestResult LoginRequestHandler::Login(RequestInfo& info)
@@ -51,8 +54,7 @@ RequestResult LoginRequestHandler::Login(RequestInfo& info)
         LoginResponse login;
         login.status = static_cast<unsigned int>(status);
         res.response = JsonResponsePacketSerializer::serializeResponse(login);
-        res.newHandler = nullptr;
-        //res.newHandler = menu...
+        res.newHandler = m_handlerFactory.createMenuRequest();
     }
     else if (status == LoginStatus::LOGIN_FAILED)
     {
@@ -84,8 +86,7 @@ RequestResult LoginRequestHandler::SignUp(RequestInfo& info)
         SignUpResponse signUp;
         signUp.status = static_cast<unsigned int>(status);
         res.response = JsonResponsePacketSerializer::serializeResponse(signUp);
-        res.newHandler = nullptr;
-        //res.newHandler = menu
+        res.newHandler = m_handlerFactory.createMenuRequest();
     }
     else if (status == SignUpStatus::USER_ALREADY_EXISTS)
     {

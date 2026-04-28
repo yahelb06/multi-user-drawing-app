@@ -21,9 +21,15 @@ std::string Room::MakeRandomRoomId()
     return random_string;
 }
 
-Room::Room(const std::string& id, const LoggedUser& manager, const Paint& paint)
+Room::Room(const LoggedUser& manager)
 {
-    this->_id = id;
+    this->_id = MakeRandomRoomId();
+    this->_userInTheRoom.push_back(manager);
+}
+
+Room::Room(const LoggedUser& manager, const Paint& paint)
+{
+    this->_id = MakeRandomRoomId();
     this->_userInTheRoom.push_back(manager);
     this->_paint = paint;
 }
@@ -33,10 +39,14 @@ std::string Room::GetRoomId() const
     return this->_id;
 }
 
-Room Room::CreateRoom(const LoggedUser& manager, const Paint& paint) const
+LoggedUser Room::GetRoomManager() const
 {
-    std::string id = MakeRandomRoomId();
-    return Room(id, manager, paint);
+    return this->_userInTheRoom[0];
+}
+
+void Room::setPaint(const Paint& paint)
+{
+    this->_paint = paint;
 }
 
 void Room::CloseRoom()
@@ -47,4 +57,19 @@ void Room::CloseRoom()
 void Room::addUserToRoom(const LoggedUser& user)
 {
     this->_userInTheRoom.push_back(user);
+}
+
+void Room::exitRoom(const LoggedUser& user)
+{
+    this->_userInTheRoom.erase(std::remove(_userInTheRoom.begin(), _userInTheRoom.end(), user), _userInTheRoom.end());
+}
+
+bool Room::removeUser(const LoggedUser& manager, const LoggedUser& userToRemove)
+{
+    if (manager == this->_userInTheRoom[0])
+    {
+        exitRoom(userToRemove);
+        return true;
+    }
+    return false;
 }

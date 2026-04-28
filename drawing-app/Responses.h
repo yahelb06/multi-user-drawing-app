@@ -25,3 +25,8 @@ struct LogOutResponse
 {
 	unsigned int status;
 };
+
+struct CreateRoomResponse
+{
+	unsigned int status;
+};

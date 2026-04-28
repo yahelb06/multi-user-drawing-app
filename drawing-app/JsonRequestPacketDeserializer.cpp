@@ -34,3 +34,11 @@ LogOutRequest JsonRequestPacketDeserializer::deserializeLogOutUserRequest(const 
 	req.username = json["username"].get<std::string>();
 	return req;
 }
+
+CreateRoomRequest JsonRequestPacketDeserializer::deserializeCreateRoomRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	CreateRoomRequest req;
+	req.username = json["username"].get<std::string>();
+	return req;
+}

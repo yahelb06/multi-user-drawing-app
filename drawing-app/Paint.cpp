@@ -1,13 +1,13 @@
 #include "Paint.h"
 
-Paint::Paint(const std::vector<Line>& LinesInPaint)
+Paint::Paint(const std::map<Line, std::string>& LinesInPaint, const std::string& name)
 {
 	this->_LinesInPaint = LinesInPaint;
 }
 
-std::vector<Line> Paint::getPaint() const
+std::map<Line, std::string> Paint::getPaint() const
 {
-	return this->_LinesInPaint;
+	return std::map<Line, std::string>();
 }
 
 std::string Paint::getPaintName() const

@@ -12,6 +12,7 @@ class LoginRequestHandler : public IRequestHandler
 {
 public:
 	LoginRequestHandler(RequestHandlerFactory& handlerFactory);
+	~LoginRequestHandler();
 
 	virtual bool isRequestRelevant(RequestInfo& info) override;
 	virtual RequestResult handlerRequest(RequestInfo& info) override;

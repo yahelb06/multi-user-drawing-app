@@ -32,6 +32,11 @@ struct LogOutRequest
 	std::string username;
 };
 
+struct CreateRoomRequest
+{
+	std::string username;
+};
+
 class IRequestHandler
 {
 public:

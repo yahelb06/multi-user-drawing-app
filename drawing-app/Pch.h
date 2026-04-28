@@ -7,7 +7,8 @@ enum class MessageCode : unsigned char
 	LOGIN_REQUEST = 100,
 	SIGNUP_REQUEST = 110,
 	REMOVE_USER = 120,
-	LOG_OUT_REQUEST = 130
+	LOG_OUT_REQUEST = 130,
+	CREATE_ROOM = 140
 };
 
 #define PORT 8826

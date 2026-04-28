@@ -4,7 +4,9 @@
 #include "Responses.h"
 #include "JsonResponsePacketSerializer.h"
 #include "JsonRequestPacketDeserializer.h"
-#include "RequestHandlerFactory.h"
+#include "RoomManager.h"
+
+class RequestHandlerFactory;
 
 class MenuRequestHandler : public IRequestHandler
 {
