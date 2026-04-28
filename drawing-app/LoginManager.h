@@ -5,21 +5,21 @@
 
 enum class LoginStatus : unsigned int
 {
-	LOGIN_SUCCESS,
+	LOGIN_SUCCESS = 1,
 	LOGIN_FAILED,
 	USER_ALREADY_LOGGED_IN
 };
 
 enum class SignUpStatus : unsigned int
 {
-	SIGNUP_SUCCESS,
+	SIGNUP_SUCCESS = 1,
 	USER_ALREADY_EXISTS,
 	SIGNUP_FAILED
 };
 
 enum class RemoveStatus : unsigned int
 {
-	REMOVE_SUCCESS,
+	REMOVE_SUCCESS = 1,
 	USER_NOT_FOUND,
 	REMOVE_FAILED
 };

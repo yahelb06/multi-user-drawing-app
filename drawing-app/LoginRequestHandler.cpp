@@ -1,7 +1,7 @@
 #include "LoginRequestHandler.h"
 #include "RequestHandlerFactory.h"
 
-LoginRequestHandler::LoginRequestHandler(LoginManager& loginManager, RequestHandlerFactory& handlerFactory) : m_loginManager(loginManager), m_handlerFactory(handlerFactory)
+LoginRequestHandler::LoginRequestHandler( RequestHandlerFactory& handlerFactory) : m_handlerFactory(handlerFactory)
 {
 }
 
@@ -44,7 +44,7 @@ RequestResult LoginRequestHandler::Login(RequestInfo& info)
 
     LoginRequest req = JsonRequestPacketDeserializer::deserializeLoginRequest(info.buffer);
 
-    LoginStatus status = static_cast<LoginStatus>(this->m_loginManager.login(req.username, req.password));
+    LoginStatus status = static_cast<LoginStatus>(this->m_handlerFactory.getLoginManager().login(req.username, req.password));
 
     if (status == LoginStatus::LOGIN_SUCCESS)
     {
@@ -78,7 +78,7 @@ RequestResult LoginRequestHandler::SignUp(RequestInfo& info)
     SignUpRequest req = JsonRequestPacketDeserializer::deserializeSignUpRequest(info.buffer);
     
     SignUpStatus status;
-    status = static_cast<SignUpStatus>(this->m_loginManager.signup(req.username, req.password, req.mail));
+    status = static_cast<SignUpStatus>(this->m_handlerFactory.getLoginManager().signup(req.username, req.password, req.mail));
     if (status == SignUpStatus::SIGNUP_SUCCESS)
     {
         SignUpResponse signUp;
@@ -111,7 +111,7 @@ RequestResult LoginRequestHandler::Remove(RequestInfo& info)
     RemoveUserRequest req = JsonRequestPacketDeserializer::deserializeRemoveUserRequest(info.buffer);
     
     RemoveStatus status;
-    status = static_cast<RemoveStatus>(this->m_loginManager.Remove(req.username));
+    status = static_cast<RemoveStatus>(this->m_handlerFactory.getLoginManager().Remove(req.username));
 
     if (status == RemoveStatus::REMOVE_SUCCESS)
     {

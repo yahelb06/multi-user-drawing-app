@@ -15,4 +15,5 @@ public:
 	static Buffer serializeResponse(LoginResponse& res);
 	static Buffer serializeResponse(SignUpResponse& res);
 	static Buffer serializeResponse(RemoveUserResponse& res);
+	static Buffer serializeResponse(LogOutResponse& res);
 };

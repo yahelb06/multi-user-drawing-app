@@ -10,4 +10,5 @@ public:
 	static LoginRequest deserializeLoginRequest(const Buffer& buffer);
 	static SignUpRequest deserializeSignUpRequest(const Buffer& buffer);
 	static RemoveUserRequest deserializeRemoveUserRequest(const Buffer& buffer);
+	static LogOutRequest deserializeLogOutUserRequest(const Buffer& buffer);
 };

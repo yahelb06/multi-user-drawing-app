@@ -26,3 +26,11 @@ RemoveUserRequest JsonRequestPacketDeserializer::deserializeRemoveUserRequest(co
 	req.username = json["username"].get<std::string>();
 	return req;
 }
+
+LogOutRequest JsonRequestPacketDeserializer::deserializeLogOutUserRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	LogOutRequest req;
+	req.username = json["username"].get<std::string>();
+	return req;
+}

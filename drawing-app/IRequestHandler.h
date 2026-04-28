@@ -27,6 +27,11 @@ struct RemoveUserRequest
 	std::string username;
 };
 
+struct LogOutRequest
+{
+	std::string username;
+};
+
 class IRequestHandler
 {
 public:

@@ -20,3 +20,8 @@ struct RemoveUserResponse
 {
 	unsigned int status;
 };
+
+struct LogOutResponse
+{
+	unsigned int status;
+};
