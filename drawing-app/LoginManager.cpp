@@ -47,10 +47,11 @@ SignUpStatus LoginManager::signup(const std::string& name, const std::string& pa
     }
 }
 
-void LoginManager::logout(const std::string& name)
+UserLogOutStatus LoginManager::logout(const std::string& name)
 {
     std::lock_guard<std::mutex> lock(this->_loggedUser_mutex);
-    this->privateLogout(name);
+    return this->privateLogout(name);
+
 }
 
 RemoveStatus LoginManager::Remove(const std::string& name)
@@ -75,6 +76,7 @@ RemoveStatus LoginManager::Remove(const std::string& name)
 
 bool LoginManager::isUserLoggedIn(const std::string& name) const
 {
+    std::lock_guard<std::mutex> lock(this->_loggedUser_mutex);
     auto it = std::find_if(m_loggedUsers.begin(), m_loggedUsers.end(), [&name](const LoggedUser& user)
         {
             return user.getUserName() == name;
@@ -87,9 +89,16 @@ bool LoginManager::isUserLoggedIn(const std::string& name) const
     return false;
 }
 
-void LoginManager::privateLogout(const std::string& name)
+UserLogOutStatus LoginManager::privateLogout(const std::string& name)
 {
     LoggedUser userToRemove(name);
     auto it = std::remove(m_loggedUsers.begin(), m_loggedUsers.end(), userToRemove);
-    this->m_loggedUsers.erase(it, this->m_loggedUsers.end());
+    //found user
+    if (it != m_loggedUsers.end())
+    {
+        this->m_loggedUsers.erase(it, this->m_loggedUsers.end());
+        return UserLogOutStatus::LOG_OUT_SUCCESS;
+    }
+
+    return UserLogOutStatus::LOG_OUT_FAILED;
 }

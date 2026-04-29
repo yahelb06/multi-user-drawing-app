@@ -49,26 +49,73 @@ void Room::setPaint(const Paint& paint)
     this->_paint = paint;
 }
 
+void Room::setUserToWaitingRoom(const LoggedUser& user)
+{
+    std::lock_guard<std::mutex> lock(this->m_waitingRoom_mutex);
+    this->_userWantToJoin.push_back(user);
+}
+
+void Room::removeUserFromWaitingRoom(const LoggedUser& user)
+{
+    this->_userWantToJoin.erase(std::remove(_userWantToJoin.begin(), _userWantToJoin.end(), user), _userWantToJoin.end());
+}
+
+bool Room::isUserManager(const LoggedUser& manager)
+{
+    if (this->_userInTheRoom.empty())
+    {
+        return false;
+    }
+    return (this->_userInTheRoom[0] == manager);
+}
+
+void Room::stopJoinRequest(const LoggedUser& user)
+{
+    std::lock_guard<std::mutex> lock(this->m_waitingRoom_mutex);
+    removeUserFromWaitingRoom(user);
+}
+
 void Room::CloseRoom()
 {
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     this->_userInTheRoom.clear();
 }
 
-void Room::addUserToRoom(const LoggedUser& user)
+bool Room::addUserToRoom(const LoggedUser& manager, const LoggedUser& userToAdd, const bool& accept)
 {
-    this->_userInTheRoom.push_back(user);
+
+    std::lock_guard<std::mutex> waitingRoomLock(this->m_waitingRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
+    if (isUserManager(manager))
+    {
+        if (accept)
+        {
+            this->_userInTheRoom.push_back(userToAdd);
+            return true;
+        }
+        removeUserFromWaitingRoom(userToAdd);
+    }
+    return false;
 }
 
-void Room::exitRoom(const LoggedUser& user)
+bool Room::exitRoom(const LoggedUser& user)
 {
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     this->_userInTheRoom.erase(std::remove(_userInTheRoom.begin(), _userInTheRoom.end(), user), _userInTheRoom.end());
+    if (this->_userInTheRoom.empty())
+    {
+        CloseRoom();
+        return true;
+    }
+    return false;
 }
 
 bool Room::removeUser(const LoggedUser& manager, const LoggedUser& userToRemove)
 {
-    if (manager == this->_userInTheRoom[0])
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
+    if (isUserManager(manager))
     {
-        exitRoom(userToRemove);
+        this->_userInTheRoom.erase(std::remove(_userInTheRoom.begin(), _userInTheRoom.end(), userToRemove), _userInTheRoom.end());
         return true;
     }
     return false;

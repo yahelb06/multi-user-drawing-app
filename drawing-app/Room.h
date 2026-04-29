@@ -12,8 +12,15 @@ private:
 	std::vector<LoggedUser> _userWantToJoin;
 	Paint _paint;
 
+	mutable std::mutex m_waitingRoom_mutex;
+
+	mutable std::mutex m_UserInRoom_mutex;
+
 	bool doesRoomEmpty() const;
 	static std::string MakeRandomRoomId();
+	bool isUserManager(const LoggedUser& manager);
+
+	void CloseRoom();
 
 public:
 	Room(const LoggedUser& manager);
@@ -23,10 +30,14 @@ public:
 	LoggedUser GetRoomManager() const;
 
 	void setPaint(const Paint& paint);
+	void setUserToWaitingRoom(const LoggedUser& user);
+	void removeUserFromWaitingRoom(const LoggedUser& user);
 
-	void CloseRoom();
-	void addUserToRoom(const LoggedUser& user);
-	void exitRoom(const LoggedUser& user);
+	void stopJoinRequest(const LoggedUser& user);
+
+
+	bool addUserToRoom(const LoggedUser& manager, const LoggedUser& userToAdd, const bool& accept);
+	bool exitRoom(const LoggedUser& user);
 	bool removeUser(const LoggedUser& manager, const LoggedUser& userToRemove);
 
 };

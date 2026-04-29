@@ -21,12 +21,32 @@ struct RemoveUserResponse
 	unsigned int status;
 };
 
-struct LogOutResponse
+struct UserLogOutResponse
 {
 	unsigned int status;
 };
 
 struct CreateRoomResponse
+{
+	unsigned int status;
+};
+
+struct JoinRoomResponse
+{
+	unsigned int status;
+};
+
+struct RoomLogOutResponse
+{
+	unsigned int status;
+};
+
+struct AddUserResponse
+{
+	unsigned int status;
+};
+
+struct RemoveUserFromRoomResponse
 {
 	unsigned int status;
 };

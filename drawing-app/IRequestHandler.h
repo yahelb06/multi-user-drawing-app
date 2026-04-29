@@ -27,7 +27,7 @@ struct RemoveUserRequest
 	std::string username;
 };
 
-struct LogOutRequest
+struct UserLogOutRequest
 {
 	std::string username;
 };
@@ -35,6 +35,33 @@ struct LogOutRequest
 struct CreateRoomRequest
 {
 	std::string username;
+};
+
+struct JoinRoomRequest
+{
+	std::string username;
+	std::string roomId;
+};
+
+struct RoomLogOutRequest
+{
+	std::string username;
+	std::string roomId;
+};
+
+struct AddUserRequest
+{
+	std::string manager;
+	std::string userToAdd;
+	std::string roomId;
+	bool accept;
+};
+
+struct RemoveUserFromRoomRequest
+{
+	std::string manager;
+	std::string userToRemove;
+	std::string roomId;
 };
 
 class IRequestHandler

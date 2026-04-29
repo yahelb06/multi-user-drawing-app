@@ -56,10 +56,10 @@ Buffer JsonResponsePacketSerializer::serializeResponse(RemoveUserResponse& res)
     return buffer;
 }
 
-Buffer JsonResponsePacketSerializer::serializeResponse(LogOutResponse& res)
+Buffer JsonResponsePacketSerializer::serializeResponse(UserLogOutResponse& res)
 {
     Buffer buffer;
-    buffer.push_back(static_cast<unsigned char>(MessageCode::LOG_OUT_REQUEST));
+    buffer.push_back(static_cast<unsigned char>(MessageCode::USER_LOG_OUT_REQUEST));
     nlohmann::json data;
     data["Status"] = res.status;
     std::string jsonStr = data.dump();
@@ -72,6 +72,54 @@ Buffer JsonResponsePacketSerializer::serializeResponse(CreateRoomResponse& res)
 {
     Buffer buffer;
     buffer.push_back(static_cast<unsigned char>(MessageCode::CREATE_ROOM));
+    nlohmann::json data;
+    data["Status"] = res.status;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
+Buffer JsonResponsePacketSerializer::serializeResponse(JoinRoomResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::JOIN_ROOM));
+    nlohmann::json data;
+    data["Status"] = res.status;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
+Buffer JsonResponsePacketSerializer::serializeResponse(RoomLogOutResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::ROOM_LOG_OUT_REQUEST));
+    nlohmann::json data;
+    data["Status"] = res.status;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
+Buffer JsonResponsePacketSerializer::serializeResponse(AddUserResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::ADD_USER_TO_ROOM));
+    nlohmann::json data;
+    data["Status"] = res.status;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
+Buffer JsonResponsePacketSerializer::serializeResponse(RemoveUserFromRoomResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::REMOVE_USER_FROM_ROOM));
     nlohmann::json data;
     data["Status"] = res.status;
     std::string jsonStr = data.dump();

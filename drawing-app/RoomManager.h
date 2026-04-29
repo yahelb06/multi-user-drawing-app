@@ -3,10 +3,24 @@
 #include "IDatabase.h"
 #include "Room.h"
 
+enum class JoinRoomStatus : unsigned int
+{
+	WAITING_FOR_MANAGER = 1,
+	JOIN_FAILED
+};
+
 enum class AddUserStatus : unsigned int
 {
 	ADD_SUCCESS = 1,
-	USER_ISNT_THE_MANAGER
+	USER_ISNT_THE_MANAGER,
+	ROOM_NOT_FOUND
+};
+
+enum class RoomLogOutStatus : unsigned int
+{
+	LOG_OUT_SUCCESS = 1,
+	LOG_OUT_FAILED,
+	ROOM_CLOSED
 };
 
 class RoomManager
@@ -21,5 +35,11 @@ private:
 public:
 	RoomManager(IDatabase* database);
 
+	std::vector<Room>::iterator FindRoom(const std::string& roomId) const;
+
 	void CreateRoom(const LoggedUser& user);
+	JoinRoomStatus JoinRoom(const LoggedUser& user, const std::string& roomId);
+	RoomLogOutStatus LogOut(const LoggedUser& user, const std::string& roomId);
+	AddUserStatus AddUser(const LoggedUser& manager, const LoggedUser& userToAdd, const std::string& roomId, const bool& accept);
+	RoomLogOutStatus RemoveUserFromRoom(const LoggedUser& manager, const LoggedUser& userToRemove, const std::string& roomId);
 };

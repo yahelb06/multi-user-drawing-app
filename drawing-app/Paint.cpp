@@ -7,7 +7,7 @@ Paint::Paint(const std::map<Line, std::string>& LinesInPaint, const std::string&
 
 std::map<Line, std::string> Paint::getPaint() const
 {
-	return std::map<Line, std::string>();
+	return this->_LinesInPaint;
 }
 
 std::string Paint::getPaintName() const

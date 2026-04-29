@@ -22,4 +22,7 @@ private:
 
 	RequestResult Logout(const RequestInfo& info);
 	RequestResult CreateRoom(const RequestInfo& info);
+	RequestResult JoinRoom(const RequestInfo& info);
+	RequestResult AddUser(const RequestInfo& info);
+	RequestResult RemoveUserFromRoom(const RequestInfo& info);
 };

@@ -17,6 +17,12 @@ enum class SignUpStatus : unsigned int
 	SIGNUP_FAILED
 };
 
+enum class UserLogOutStatus : unsigned int
+{
+	LOG_OUT_SUCCESS = 1,
+	LOG_OUT_FAILED
+};
+
 enum class RemoveStatus : unsigned int
 {
 	REMOVE_SUCCESS = 1,
@@ -30,12 +36,12 @@ public:
 	LoginManager(IDatabase* m_database);
 	LoginStatus login(const std::string& name, const std::string& pass);
 	SignUpStatus signup(const std::string& name, const std::string& pass, const std::string& mail);
-	void logout(const std::string& name);
+	UserLogOutStatus logout(const std::string& name);
 	RemoveStatus Remove(const std::string& name);
 
 private:
 	bool isUserLoggedIn(const std::string& name) const;
-	void privateLogout(const std::string& name);
+	UserLogOutStatus privateLogout(const std::string& name);
 
 	mutable std::mutex _loggedUser_mutex;
 	IDatabase* m_database;

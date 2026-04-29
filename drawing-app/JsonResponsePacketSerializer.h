@@ -15,6 +15,10 @@ public:
 	static Buffer serializeResponse(LoginResponse& res);
 	static Buffer serializeResponse(SignUpResponse& res);
 	static Buffer serializeResponse(RemoveUserResponse& res);
-	static Buffer serializeResponse(LogOutResponse& res);
+	static Buffer serializeResponse(UserLogOutResponse& res);
 	static Buffer serializeResponse(CreateRoomResponse& res);
+	static Buffer serializeResponse(JoinRoomResponse& res);
+	static Buffer serializeResponse(RoomLogOutResponse& res);
+	static Buffer serializeResponse(AddUserResponse& res);
+	static Buffer serializeResponse(RemoveUserFromRoomResponse& res);
 };

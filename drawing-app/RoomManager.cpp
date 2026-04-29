@@ -4,9 +4,83 @@ RoomManager::RoomManager(IDatabase* database) : m_database(database)
 {
 }
 
+std::vector<Room>::iterator RoomManager::FindRoom(const std::string& roomId) const
+{
+    const auto& it = std::find_if(m_RoomOpen.begin(), m_RoomOpen.end(), [&](const Room& r)
+        {
+            return r.GetRoomId() == roomId;
+        });
+}
+
 void RoomManager::CreateRoom(const LoggedUser& user)
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
     Room userRoom(user);
     this->m_RoomOpen.push_back(userRoom);
+}
+
+JoinRoomStatus RoomManager::JoinRoom(const LoggedUser& user, const std::string& roomId)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room id
+    if (it != this->m_RoomOpen.end())
+    {
+        it->setUserToWaitingRoom(user);
+        return JoinRoomStatus::WAITING_FOR_MANAGER;
+    }
+    return JoinRoomStatus::JOIN_FAILED;
+}
+
+RoomLogOutStatus RoomManager::LogOut(const LoggedUser& user, const std::string& roomId)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room
+    if (it != this->m_RoomOpen.end())
+    {
+        if (it->exitRoom(user))
+        {
+            this->m_RoomOpen.erase(it);
+            return RoomLogOutStatus::ROOM_CLOSED;
+        }
+        return RoomLogOutStatus::LOG_OUT_SUCCESS;
+    }
+    return RoomLogOutStatus::LOG_OUT_FAILED;
+}
+
+AddUserStatus RoomManager::AddUser(const LoggedUser& manager, const LoggedUser& userToAdd, const std::string& roomId, const bool& accept)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room
+    if (it != this->m_RoomOpen.end())
+    {
+        if (it->addUserToRoom(manager, userToAdd, accept))
+        {
+            return AddUserStatus::ADD_SUCCESS;
+        }
+        return AddUserStatus::USER_ISNT_THE_MANAGER;
+    }
+    return AddUserStatus::ROOM_NOT_FOUND;
+}
+
+RoomLogOutStatus RoomManager::RemoveUserFromRoom(const LoggedUser& manager, const LoggedUser& userToRemove, const std::string& roomId)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room
+    if (it != this->m_RoomOpen.end())
+    {
+        if (it->removeUser(manager, userToRemove))
+        {
+            return RoomLogOutStatus::LOG_OUT_SUCCESS;
+        }
+        return RoomLogOutStatus::LOG_OUT_FAILED;
+    }
+    return RoomLogOutStatus::ROOM_CLOSED;
 }

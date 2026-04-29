@@ -14,7 +14,8 @@ bool LoginRequestHandler::isRequestRelevant(RequestInfo& info)
     MessageCode code = static_cast<MessageCode>(info.id);
     return (code == MessageCode::LOGIN_REQUEST ||
         code == MessageCode::REMOVE_USER ||
-        code == MessageCode::SIGNUP_REQUEST);
+        code == MessageCode::SIGNUP_REQUEST ||
+        code == MessageCode::USER_LOG_OUT_REQUEST);
 }
 
 RequestResult LoginRequestHandler::handlerRequest(RequestInfo& info)
@@ -34,6 +35,10 @@ RequestResult LoginRequestHandler::handlerRequest(RequestInfo& info)
     else if (code == MessageCode::SIGNUP_REQUEST)
     {
         return SignUp(info);
+    }
+    else if (code == MessageCode::USER_LOG_OUT_REQUEST)
+    {
+        return LogOut(info);
     }
     else if (code == MessageCode::REMOVE_USER)
     {
@@ -102,6 +107,31 @@ RequestResult LoginRequestHandler::SignUp(RequestInfo& info)
         res.response = JsonResponsePacketSerializer::serializeResponse(err);
         res.newHandler = m_handlerFactory.CreateLoginRequest();
     }
+    return res;
+}
+
+RequestResult LoginRequestHandler::LogOut(RequestInfo& info)
+{
+    RequestResult res;
+
+    UserLogOutRequest req = JsonRequestPacketDeserializer::deserializeLogOutUserRequest(info.buffer);
+    UserLogOutStatus status = static_cast<UserLogOutStatus>(this->m_handlerFactory.getLoginManager().logout(req.username));
+
+    if (status == UserLogOutStatus::LOG_OUT_SUCCESS)
+    {
+        UserLogOutResponse logOut;
+        logOut.status = static_cast<unsigned int>(status);
+        res.response = JsonResponsePacketSerializer::serializeResponse(logOut);
+        res.newHandler = this->m_handlerFactory.CreateLoginRequest();
+    }
+    else
+    {
+        ErrResponse err;
+        err.message = "Log out failed. Please try again.";
+        res.response = JsonResponsePacketSerializer::serializeResponse(err);
+        res.newHandler = this->m_handlerFactory.createMenuRequest();
+    }
+
     return res;
 }
 

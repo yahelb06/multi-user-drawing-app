@@ -20,6 +20,7 @@ public:
 private:
 	RequestResult Login(RequestInfo& info);
 	RequestResult SignUp(RequestInfo& info);
+	RequestResult LogOut(RequestInfo& info);
 	RequestResult Remove(RequestInfo& info);
 
 	RequestHandlerFactory& m_handlerFactory;
