@@ -86,8 +86,34 @@ RemovePaintFromRoomRequest JsonRequestPacketDeserializer::deserializeRemovePaint
 {
 	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
 	RemovePaintFromRoomRequest req;
-	req.manager = json["manager"].get<std::string>();
-	req.paintName = json["paintName"].get<std::string>();
-	req.roomId = json["roomId"].get<std::string>();
+	req.data.manager = json["manager"].get<std::string>();
+	req.data.paintName = json["paintName"].get<std::string>();
+	req.data.roomId = json["roomId"].get<std::string>();
 	return req;
+}
+
+AddPaintToRoomRequest JsonRequestPacketDeserializer::deserializeAddPaintToRoomRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	AddPaintToRoomRequest req;
+	req.data.manager = json["manager"].get<std::string>();
+	req.data.paintName = json["paintName"].get<std::string>();
+	req.data.roomId = json["roomId"].get<std::string>();
+	req.LinesInPaint = getLines(json["LinesInPaint"]);
+	return req;
+}
+
+std::vector<Line> JsonRequestPacketDeserializer::getLines(const nlohmann::json& arr)
+{
+	std::vector<Line> Lines;
+	Lines.reserve(arr.size());
+
+	for (const auto& line : arr)
+	{
+		Lines.emplace_back(
+			std::make_pair(Coordinates(arr["x1"], arr["y1"]), Coordinates(arr["x2"], arr["y2"])),
+			arr["color"].get<std::string>()
+		);
+	}
+	return Lines;
 }

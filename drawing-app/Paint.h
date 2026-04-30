@@ -7,15 +7,18 @@ class Paint
 private:
 
 	std::string _paintName;
-	std::map<Line, std::string> _LinesInPaint;
+	std::vector<Line> _LinesInPaint;
 
 public:
 	Paint() = default;
-	Paint(const std::map<Line, std::string>& LinesInPaint, const std::string& name);
+	Paint(const std::string& paintName);
+	Paint(const std::vector<Line>& LinesInPaint, const std::string& name);
 
-	std::map<Line, std::string> getPaint() const;
+	std::vector<Line> getPaint() const;
+	void setPaintLines(const std::vector<Line>& LinesInPaint);
 
 	std::string getPaintName() const;
 	void setPaintName(const std::string& name);
-	void cleanPaint(const bool& clean);
+
+	void cleanPaint();
 };

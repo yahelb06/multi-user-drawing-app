@@ -139,3 +139,15 @@ Buffer JsonResponsePacketSerializer::serializeResponse(RemovePaintFromRoomRespon
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
     return buffer;
 }
+
+Buffer JsonResponsePacketSerializer::serializeResponse(AddPaintToRoomResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::ADD_PAINT_TO_ROOM));
+    nlohmann::json data;
+    data["Status"] = res.status;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}

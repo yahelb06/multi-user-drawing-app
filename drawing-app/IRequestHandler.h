@@ -1,6 +1,7 @@
 #pragma once
 #include "Pch.h"
 #include "RequestResult.h"
+#include "Line.h"
 
 struct RequestInfo
 {
@@ -64,11 +65,22 @@ struct RemoveUserFromRoomRequest
 	std::string roomId;
 };
 
-struct RemovePaintFromRoomRequest
+struct PaintRoomData
 {
 	std::string manager;
 	std::string roomId;
 	std::string paintName;
+};
+
+struct RemovePaintFromRoomRequest
+{
+	PaintRoomData data;
+};
+
+struct AddPaintToRoomRequest
+{
+	PaintRoomData data;
+	std::vector<Line> LinesInPaint;
 };
 
 class IRequestHandler

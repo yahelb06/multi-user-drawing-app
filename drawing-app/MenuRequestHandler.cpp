@@ -190,16 +190,16 @@ RequestResult MenuRequestHandler::RemovePaintFromRoom(const RequestInfo& info)
 	RequestResult res;
 
 	RemovePaintFromRoomRequest req = JsonRequestPacketDeserializer::deserializeRemovePaintFromRoomRequest(info.buffer);
-	RemovePaintFromRoomStatus status = static_cast<RemovePaintFromRoomStatus>(this->m_handlerFactory.getRoomManager().RemovePaint(req.manager, req.roomId, req.paintName));
+	PaintRoomStatus status = static_cast<PaintRoomStatus>(this->m_handlerFactory.getRoomManager().RemovePaint(req.data.manager, req.data.roomId, req.data.paintName));
 
-	if (status == RemovePaintFromRoomStatus::REMOVE_SUCCESS)
+	if (status == PaintRoomStatus::SUCCESS)
 	{
 		RemovePaintFromRoomResponse removePaint;
 		removePaint.status = static_cast<unsigned int>(status);
 		res.response = JsonResponsePacketSerializer::serializeResponse(removePaint);
 		//res.newHandler = room...
 	}
-	else if (status == RemovePaintFromRoomStatus::REMOVE_FAILED)
+	else if (status == PaintRoomStatus::FAILED)
 	{
 		ErrResponse err;
 		err.message = "Remove paint failed, Please try again.";
@@ -213,4 +213,37 @@ RequestResult MenuRequestHandler::RemovePaintFromRoom(const RequestInfo& info)
 		res.response = JsonResponsePacketSerializer::serializeResponse(err);
 		//res.newHandler = room...
 	}
+	return res;
+}
+
+RequestResult MenuRequestHandler::AddPaintToRoom(const RequestInfo& info)
+{
+	RequestResult res;
+
+	AddPaintToRoomRequest req = JsonRequestPacketDeserializer::deserializeAddPaintToRoomRequest(info.buffer);
+
+	PaintRoomStatus status = static_cast<PaintRoomStatus>(this->m_handlerFactory.getRoomManager().AddPaint(req.data.manager, req.data.roomId, req.data.paintName, req.LinesInPaint));
+	if (status == PaintRoomStatus::SUCCESS)
+	{
+		AddPaintToRoomResponse addPaint;
+		addPaint.status = static_cast<unsigned int>(status);
+		res.response = JsonResponsePacketSerializer::serializeResponse(addPaint);
+		res.newHandler = nullptr;
+		///res.newHandler = room...
+	}
+	else if (status == PaintRoomStatus::FAILED)
+	{
+		ErrResponse err;
+		err.message = "Add paint failed, Please try again.";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		//res.newHandler = room...
+	}
+	else
+	{
+		ErrResponse err;
+		err.message = "Room not found add paint failed, Please try again.";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		//res.newHandler = room...
+	}
+	return res;
 }

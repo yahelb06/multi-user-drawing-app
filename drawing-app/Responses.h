@@ -55,3 +55,8 @@ struct RemovePaintFromRoomResponse
 {
 	unsigned int status;
 };
+
+struct AddPaintToRoomResponse
+{
+	unsigned int status;
+};

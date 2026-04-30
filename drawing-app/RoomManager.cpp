@@ -85,7 +85,7 @@ RoomLogOutStatus RoomManager::RemoveUserFromRoom(const LoggedUser& manager, cons
     return RoomLogOutStatus::ROOM_CLOSED;
 }
 
-RemovePaintFromRoomStatus RoomManager::RemovePaint(const std::string& manager, const std::string& roomId, const std::string& paintName)
+PaintRoomStatus RoomManager::RemovePaint(const std::string& manager, const std::string& roomId, const std::string& paintName)
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
     const auto& it = FindRoom(roomId);
@@ -93,15 +93,37 @@ RemovePaintFromRoomStatus RoomManager::RemovePaint(const std::string& manager, c
     //found the room
     if (it != this->m_RoomOpen.end())
     {
+        //if the paint to remove is the paint right now
         if (it->doesCurrentPaint(paintName))
         {
             int paintId = this->m_database->getPaintId(manager, paintName);
             if (it->removePaint(manager, paintName))
             {
-                return RemovePaintFromRoomStatus::REMOVE_SUCCESS;
+                return PaintRoomStatus::SUCCESS;
             }
         }
-        return RemovePaintFromRoomStatus::REMOVE_FAILED;
+        return PaintRoomStatus::FAILED;
     }
-    return RemovePaintFromRoomStatus::ROOM_NOT_FOUND;
+    return PaintRoomStatus::ROOM_NOT_FOUND;
+}
+
+PaintRoomStatus RoomManager::AddPaint(const std::string& manager, const std::string& roomId, const std::string& paintName, const std::vector<Line>& LinesInPaint)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room
+    if (it != this->m_RoomOpen.end())
+    {
+        //if there is paint right now in the room
+        if (!it->doesHavePaint())
+        {
+            if (it->addPaint(manager, paintName, LinesInPaint))
+            {
+                return PaintRoomStatus::SUCCESS;
+            }
+        }
+        return PaintRoomStatus::FAILED;
+    }
+    return PaintRoomStatus::ROOM_NOT_FOUND;
 }

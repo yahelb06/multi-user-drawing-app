@@ -26,4 +26,5 @@ private:
 	RequestResult AddUser(const RequestInfo& info);
 	RequestResult RemoveUserFromRoom(const RequestInfo& info);
 	RequestResult RemovePaintFromRoom(const RequestInfo& info);
+	RequestResult AddPaintToRoom(const RequestInfo& info);
 };

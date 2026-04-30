@@ -21,17 +21,14 @@ std::string Room::MakeRandomRoomId()
     return random_string;
 }
 
-Room::Room(const LoggedUser& manager)
+Room::Room(const LoggedUser& manager) : _id(MakeRandomRoomId()), _paint(NO_PAINT_IN_ROOM)
 {
-    this->_id = MakeRandomRoomId();
     this->_userInTheRoom.push_back(manager);
 }
 
-Room::Room(const LoggedUser& manager, const Paint& paint)
+Room::Room(const LoggedUser& manager, const Paint& paint) : _id(MakeRandomRoomId()), _paint(paint)
 {
-    this->_id = MakeRandomRoomId();
     this->_userInTheRoom.push_back(manager);
-    this->_paint = paint;
 }
 
 std::string Room::GetRoomId() const
@@ -69,6 +66,11 @@ bool Room::isUserManager(const LoggedUser& manager)
     return (this->_userInTheRoom[0] == manager);
 }
 
+bool Room::doesHavePaint()
+{
+    return (this->_paint.getPaintName() == NO_PAINT_IN_ROOM);
+}
+
 bool Room::doesCurrentPaint(const std::string& paintName)
 {
     return (this->_paint.getPaintName() == paintName);
@@ -89,11 +91,27 @@ bool Room::removePaint(const LoggedUser& manager, const std::string& paintName)
     }
     if (this->doesCurrentPaint(paintName))
     {
-        this->_paint.setPaintName("no paint");
-        this->_paint.cleanPaint(true);
+        this->_paint.setPaintName("no_paint");
+        this->_paint.cleanPaint();
         return true;
     }
     return false;
+}
+
+bool Room::addPaint(const LoggedUser& manager, const std::string& paintName, const std::vector<Line>& LinesInPaint)
+{
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
+    if (!this->isUserManager(manager))
+    {
+        return false;
+    }
+    if (!doesHavePaint())
+    {
+        return false;
+    }
+    this->_paint.setPaintName(paintName);
+    this->_paint.setPaintLines(LinesInPaint);
+    return true;
 }
 
 void Room::CloseRoom()
