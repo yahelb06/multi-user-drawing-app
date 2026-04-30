@@ -84,3 +84,24 @@ RoomLogOutStatus RoomManager::RemoveUserFromRoom(const LoggedUser& manager, cons
     }
     return RoomLogOutStatus::ROOM_CLOSED;
 }
+
+RemovePaintFromRoomStatus RoomManager::RemovePaint(const std::string& manager, const std::string& roomId, const std::string& paintName)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room
+    if (it != this->m_RoomOpen.end())
+    {
+        if (it->doesCurrentPaint(paintName))
+        {
+            int paintId = this->m_database->getPaintId(manager, paintName);
+            if (it->removePaint(manager, paintName))
+            {
+                return RemovePaintFromRoomStatus::REMOVE_SUCCESS;
+            }
+        }
+        return RemovePaintFromRoomStatus::REMOVE_FAILED;
+    }
+    return RemovePaintFromRoomStatus::ROOM_NOT_FOUND;
+}

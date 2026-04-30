@@ -64,6 +64,13 @@ struct RemoveUserFromRoomRequest
 	std::string roomId;
 };
 
+struct RemovePaintFromRoomRequest
+{
+	std::string manager;
+	std::string roomId;
+	std::string paintName;
+};
+
 class IRequestHandler
 {
 public:

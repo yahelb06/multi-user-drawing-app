@@ -21,4 +21,5 @@ public:
 	static Buffer serializeResponse(RoomLogOutResponse& res);
 	static Buffer serializeResponse(AddUserResponse& res);
 	static Buffer serializeResponse(RemoveUserFromRoomResponse& res);
+	static Buffer serializeResponse(RemovePaintFromRoomResponse& res);
 };

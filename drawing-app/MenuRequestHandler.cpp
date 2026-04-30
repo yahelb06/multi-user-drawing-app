@@ -13,11 +13,12 @@ bool MenuRequestHandler::isRequestRelevant(RequestInfo& info)
 {
 	MessageCode code = static_cast<MessageCode>(info.id);
 
-	return (code == MessageCode::ROOM_LOG_OUT_REQUEST || 
+	return (code == MessageCode::ROOM_LOG_OUT_REQUEST ||
 		code == MessageCode::CREATE_ROOM ||
 		code == MessageCode::JOIN_ROOM ||
 		code == MessageCode::ADD_USER_TO_ROOM ||
-		code == MessageCode::REMOVE_USER_FROM_ROOM);
+		code == MessageCode::REMOVE_USER_FROM_ROOM ||
+		code == MessageCode::REMOVE_PAINT_FROM_ROOM);
 }
 
 RequestResult MenuRequestHandler::handlerRequest(RequestInfo& info)
@@ -49,6 +50,10 @@ RequestResult MenuRequestHandler::handlerRequest(RequestInfo& info)
 	else if (code == MessageCode::REMOVE_USER_FROM_ROOM)
 	{
 		return RemoveUserFromRoom(info);
+	}
+	else if (code == MessageCode::REMOVE_PAINT_FROM_ROOM)
+	{
+		return RemovePaintFromRoom(info);
 	}
 }
 
@@ -177,5 +182,35 @@ RequestResult MenuRequestHandler::RemoveUserFromRoom(const RequestInfo& info)
 		err.message = err.message = "Remove failed. Please try again.";
 		res.response = JsonResponsePacketSerializer::serializeResponse(err);
 		res.newHandler = this->m_handlerFactory.createMenuRequest();
+	}
+}
+
+RequestResult MenuRequestHandler::RemovePaintFromRoom(const RequestInfo& info)
+{
+	RequestResult res;
+
+	RemovePaintFromRoomRequest req = JsonRequestPacketDeserializer::deserializeRemovePaintFromRoomRequest(info.buffer);
+	RemovePaintFromRoomStatus status = static_cast<RemovePaintFromRoomStatus>(this->m_handlerFactory.getRoomManager().RemovePaint(req.manager, req.roomId, req.paintName));
+
+	if (status == RemovePaintFromRoomStatus::REMOVE_SUCCESS)
+	{
+		RemovePaintFromRoomResponse removePaint;
+		removePaint.status = static_cast<unsigned int>(status);
+		res.response = JsonResponsePacketSerializer::serializeResponse(removePaint);
+		//res.newHandler = room...
+	}
+	else if (status == RemovePaintFromRoomStatus::REMOVE_FAILED)
+	{
+		ErrResponse err;
+		err.message = "Remove paint failed, Please try again.";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		//res.newHandler = room...
+	}
+	else
+	{
+		ErrResponse err;
+		err.message = "Room not found remove paint failed, Please try again.";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		//res.newHandler = room...
 	}
 }

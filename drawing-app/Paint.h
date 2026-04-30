@@ -17,4 +17,5 @@ public:
 
 	std::string getPaintName() const;
 	void setPaintName(const std::string& name);
+	void cleanPaint(const bool& clean);
 };

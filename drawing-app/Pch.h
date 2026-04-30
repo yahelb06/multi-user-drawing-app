@@ -12,7 +12,8 @@ enum class MessageCode : unsigned char
 	CREATE_ROOM = 150,
 	JOIN_ROOM = 160,
 	ADD_USER_TO_ROOM = 170,
-	REMOVE_USER_FROM_ROOM = 180
+	REMOVE_USER_FROM_ROOM = 180,
+	REMOVE_PAINT_FROM_ROOM = 190
 };
 
 #define PORT 8826

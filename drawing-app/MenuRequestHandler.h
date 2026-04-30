@@ -25,4 +25,5 @@ private:
 	RequestResult JoinRoom(const RequestInfo& info);
 	RequestResult AddUser(const RequestInfo& info);
 	RequestResult RemoveUserFromRoom(const RequestInfo& info);
+	RequestResult RemovePaintFromRoom(const RequestInfo& info);
 };

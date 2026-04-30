@@ -26,6 +26,8 @@ public:
 	Room(const LoggedUser& manager);
 	Room(const LoggedUser& manager, const Paint& paint);
 
+
+	bool doesCurrentPaint(const std::string& paintName);
 	std::string GetRoomId() const;
 	LoggedUser GetRoomManager() const;
 
@@ -34,7 +36,7 @@ public:
 	void removeUserFromWaitingRoom(const LoggedUser& user);
 
 	void stopJoinRequest(const LoggedUser& user);
-
+	bool removePaint(const LoggedUser& manager, const std::string& paintName);
 
 	bool addUserToRoom(const LoggedUser& manager, const LoggedUser& userToAdd, const bool& accept);
 	bool exitRoom(const LoggedUser& user);

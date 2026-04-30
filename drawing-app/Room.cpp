@@ -69,10 +69,31 @@ bool Room::isUserManager(const LoggedUser& manager)
     return (this->_userInTheRoom[0] == manager);
 }
 
+bool Room::doesCurrentPaint(const std::string& paintName)
+{
+    return (this->_paint.getPaintName() == paintName);
+}
+
 void Room::stopJoinRequest(const LoggedUser& user)
 {
     std::lock_guard<std::mutex> lock(this->m_waitingRoom_mutex);
     removeUserFromWaitingRoom(user);
+}
+
+bool Room::removePaint(const LoggedUser& manager, const std::string& paintName)
+{
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
+    if (!this->isUserManager(manager))
+    {
+        return false;
+    }
+    if (this->doesCurrentPaint(paintName))
+    {
+        this->_paint.setPaintName("no paint");
+        this->_paint.cleanPaint(true);
+        return true;
+    }
+    return false;
 }
 
 void Room::CloseRoom()

@@ -16,4 +16,5 @@ public:
 	static RoomLogOutRequest deserializeRoomLogOutRequest(const Buffer& buffer);
 	static AddUserRequest deserializeAddUserRequest(const Buffer& buffer);
 	static RemoveUserFromRoomRequest deserializeRemoveUserFromRoomRequest(const Buffer& buffer);
+	static RemovePaintFromRoomRequest deserializeRemovePaintFromRoomRequest(const Buffer& buffer);
 };

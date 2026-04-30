@@ -23,6 +23,13 @@ enum class RoomLogOutStatus : unsigned int
 	ROOM_CLOSED
 };
 
+enum class RemovePaintFromRoomStatus : unsigned int
+{
+	REMOVE_SUCCESS = 1,
+	REMOVE_FAILED,
+	ROOM_NOT_FOUND
+};
+
 class RoomManager
 {
 private:
@@ -42,4 +49,6 @@ public:
 	RoomLogOutStatus LogOut(const LoggedUser& user, const std::string& roomId);
 	AddUserStatus AddUser(const LoggedUser& manager, const LoggedUser& userToAdd, const std::string& roomId, const bool& accept);
 	RoomLogOutStatus RemoveUserFromRoom(const LoggedUser& manager, const LoggedUser& userToRemove, const std::string& roomId);
+
+	RemovePaintFromRoomStatus RemovePaint(const std::string& manager, const std::string& roomId, const std::string& paintName);
 };

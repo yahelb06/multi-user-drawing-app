@@ -26,8 +26,10 @@ bool SqliteDatabase::open()
 	}
 	if (fileExist == FILE_DONT_EXIST)
 	{
-		std::vector<std::string> sqlStatements = { "CREATE TABLE USERS (NAME TEXT PRIMARY KEY NOT NULL , PASSWORD TEXT NOT NULL , MAIL TEXT NOT NULL);",
+		std::vector<std::string> sqlStatements = { "CREATE TABLE USERS (NAME TEXT PRIMARY KEY NOT NULL , PASSWORD TEXT NOT NULL , MAIL TEXT NOT NULL UNIQUE);",
+
 		"CREATE TABLE PAINTS (ID INT PRIMARY KEY NOT NULL, USERNAME TEXT NOT NULL, PAINT_NAME TEXT NOT NULL);",
+
 		"CREATE TABLE PAINT_LINES (LINE_ID INT PRIMARY KEY NOT NULL, PAINT_ID INT NOT NULL, START_X INT NOT NULL, START_Y INT NOT NULL, "
 			"END_X INT NOT NULL, END_Y INT NOT NULL, COLOR TEXT NOT NULL, FOREIGN KEY (PAINT_ID) REFERENCES PAINTS(ID);"};
 		for (const auto& sqlStatement : sqlStatements)
@@ -91,7 +93,7 @@ bool SqliteDatabase::doesPasswordMatch(const std::string& name, const std::strin
 	if (res != SQLITE_OK)
 	{
 		sqlite3_finalize(stmt);
-		throw (std::string(sqlite3_errmsg(this->_db)));
+		throw (std::runtime_error(sqlite3_errmsg(this->_db)));
 	}
 	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, pass.c_str(), -1, SQLITE_STATIC);
@@ -115,18 +117,23 @@ bool SqliteDatabase::addNewUser(const std::string& name, const std::string& pass
 	if (res != SQLITE_OK)
 	{
 		sqlite3_finalize(stmt);
-		throw (std::string(sqlite3_errmsg(this->_db)));
+		throw (std::runtime_error(sqlite3_errmsg(this->_db)));
 	}
 	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, pass.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 3, mail.c_str(), -1, SQLITE_STATIC);
-	if (sqlite3_step(stmt) != SQLITE_DONE)
+	res = sqlite3_step(stmt);
+	if (res == SQLITE_DONE)
 	{
 		sqlite3_finalize(stmt);
-		throw (sqlite3_errmsg(this->_db));
+		return true;
 	}
-	//if changes happend
-	return (sqlite3_changes(this->_db) > 0);
+	else if (res == SQLITE_CONSTRAINT)
+	{
+		sqlite3_finalize(stmt);
+		return false;
+	}
+	throw std::runtime_error(sqlite3_errmsg(this->_db));
 }
 
 bool SqliteDatabase::deleteUser(const std::string& name)
@@ -140,14 +147,36 @@ bool SqliteDatabase::deleteUser(const std::string& name)
 	if (res != SQLITE_OK)
 	{
 		sqlite3_finalize(stmt);
+		throw (std::runtime_error(sqlite3_errmsg(this->_db)));
+	}
+	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
+	sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
+	return sqlite3_changes(this->_db);
+}
+
+int SqliteDatabase::getPaintId(const std::string& name, const std::string& paintName)
+{
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
+	sqlite3_stmt* stmt;
+	std::string sqlStatement = "SELECT ID FROM PAINTS "
+		"WHERE NAME = ? AND PAINT_NAME = ?;";
+	int res = sqlite3_prepare_v2(this->_db, sqlStatement.c_str(), -1, &stmt, nullptr);
+
+	if (res != SQLITE_OK)
+	{
+		sqlite3_finalize(stmt);
 		throw (std::string(sqlite3_errmsg(this->_db)));
 	}
 	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
-	if (sqlite3_step(stmt) != SQLITE_DONE)
+	sqlite3_bind_text(stmt, 2, paintName.c_str(), -1, SQLITE_STATIC);
+	
+	int paintId;
+	if (sqlite3_step(stmt) != SQLITE_ROW)
 	{
-		sqlite3_finalize(stmt);
-		throw(sqlite3_errmsg(this->_db));
+		paintId = -1;
 	}
-	//if changes happend
-	return (sqlite3_changes(this->_db) > 0);
+	paintId = sqlite3_column_int(stmt, 0);
+	sqlite3_finalize(stmt);
+	return paintId;
 }

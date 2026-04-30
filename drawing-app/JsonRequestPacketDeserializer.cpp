@@ -81,3 +81,13 @@ RemoveUserFromRoomRequest JsonRequestPacketDeserializer::deserializeRemoveUserFr
 	req.roomId = json["roomId"].get<std::string>();
 	return req;
 }
+
+RemovePaintFromRoomRequest JsonRequestPacketDeserializer::deserializeRemovePaintFromRoomRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	RemovePaintFromRoomRequest req;
+	req.manager = json["manager"].get<std::string>();
+	req.paintName = json["paintName"].get<std::string>();
+	req.roomId = json["roomId"].get<std::string>();
+	return req;
+}

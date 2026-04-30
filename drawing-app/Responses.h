@@ -50,3 +50,8 @@ struct RemoveUserFromRoomResponse
 {
 	unsigned int status;
 };
+
+struct RemovePaintFromRoomResponse
+{
+	unsigned int status;
+};

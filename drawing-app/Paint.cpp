@@ -19,3 +19,8 @@ void Paint::setPaintName(const std::string& name)
 {
 	this->_paintName = name;
 }
+
+void Paint::cleanPaint(const bool& clean)
+{
+	this->_LinesInPaint.clear();
+}

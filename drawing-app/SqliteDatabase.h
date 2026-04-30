@@ -14,6 +14,7 @@ public:
 	bool doesPasswordMatch(const std::string& name, const std::string& pass) const override;
 	bool addNewUser(const std::string& name, const std::string& pass, const std::string& mail) override;
 	bool deleteUser(const std::string& name) override;
+	int getPaintId(const std::string& name, const std::string& paintName) override;
 
 private:
 
