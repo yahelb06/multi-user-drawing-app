@@ -28,7 +28,7 @@ struct UserLogOutResponse
 
 struct CreateRoomResponse
 {
-	unsigned int status;
+	std::string roomId;
 };
 
 struct JoinRoomResponse
@@ -44,6 +44,14 @@ struct RoomLogOutResponse
 struct AddUserResponse
 {
 	unsigned int status;
+	std::string userToAccept;
+	std::string roomId;
+};
+
+struct AcceptUserResponse
+{
+	unsigned int status;
+	std::string roomId;
 };
 
 struct RemoveUserFromRoomResponse
@@ -59,4 +67,10 @@ struct RemovePaintFromRoomResponse
 struct AddPaintToRoomResponse
 {
 	unsigned int status;
+
+};
+
+struct GetUsersInRoomResponse
+{
+	std::vector <std::string> usersInRoom;
 };

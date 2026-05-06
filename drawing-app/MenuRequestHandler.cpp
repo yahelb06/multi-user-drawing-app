@@ -89,9 +89,9 @@ RequestResult MenuRequestHandler::CreateRoom(const RequestInfo& info)
 
 	CreateRoomRequest req = JsonRequestPacketDeserializer::deserializeCreateRoomRequest(info.buffer);
 	LoggedUser user(req.username);
-	this->m_handlerFactory.getRoomManager().CreateRoom(user);
+	std::string roomId = this->m_handlerFactory.getRoomManager().CreateRoom(user);
 	CreateRoomResponse status;
-	status.status = 1;
+	status.roomId = roomId;
 	res.response = JsonResponsePacketSerializer::serializeResponse(status);
 	res.newHandler = nullptr;
 	//res.newHandler = room...
@@ -110,8 +110,7 @@ RequestResult MenuRequestHandler::JoinRoom(const RequestInfo& info)
 		JoinRoomResponse joinRoom;
 		joinRoom.status = static_cast<unsigned int>(JoinRoomStatus::WAITING_FOR_MANAGER);
 		res.response = JsonResponsePacketSerializer::serializeResponse(joinRoom);
-		res.newHandler = nullptr;
-		//res.newHandler = room;
+		res.newHandler = this;
 	}
 	else
 	{
@@ -135,23 +134,37 @@ RequestResult MenuRequestHandler::AddUser(const RequestInfo& info)
 		AddUserResponse addUser;
 		addUser.status = static_cast<unsigned int>(AddUserStatus::ADD_SUCCESS);
 		res.response = JsonResponsePacketSerializer::serializeResponse(addUser);
-		res.newHandler = nullptr;
-		//res.newHandler = room...
+		res.newHandler = this;
 	}
 	else if (status == AddUserStatus::USER_ISNT_THE_MANAGER)
 	{
 		ErrResponse err;
 		err.message = err.message = "Add failed, user is not the manager. Please try again.";
 		res.response = JsonResponsePacketSerializer::serializeResponse(err);
-		res.newHandler = this->m_handlerFactory.createMenuRequest();
+		res.newHandler = this;
 	}
 	else
 	{
 		ErrResponse err;
 		err.message = err.message = "Add failed. Please try again.";
 		res.response = JsonResponsePacketSerializer::serializeResponse(err);
-		res.newHandler = this->m_handlerFactory.createMenuRequest();
+		res.newHandler = this;
 	}
+	return res;
+}
+
+RequestResult MenuRequestHandler::AcceptUser(const RequestInfo& info)
+{
+	RequestResult res;
+
+	AddUserRequest req = JsonRequestPacketDeserializer::deserializeAddUserRequest(info.buffer);
+
+	AcceptUserResponse acceptUser;
+	acceptUser.status = 1;
+	acceptUser.roomId = req.roomId;
+
+	res.response = JsonResponsePacketSerializer::serializeResponse(acceptUser);
+	//res.newHandler  = room
 	return res;
 }
 
@@ -246,4 +259,9 @@ RequestResult MenuRequestHandler::AddPaintToRoom(const RequestInfo& info)
 		//res.newHandler = room...
 	}
 	return res;
+}
+
+RequestResult MenuRequestHandler::GetRooms(const RequestInfo& info)
+{
+	return RequestResult();
 }

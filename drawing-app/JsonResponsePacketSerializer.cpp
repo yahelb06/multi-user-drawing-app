@@ -73,7 +73,7 @@ Buffer JsonResponsePacketSerializer::serializeResponse(CreateRoomResponse& res)
     Buffer buffer;
     buffer.push_back(static_cast<unsigned char>(MessageCode::CREATE_ROOM));
     nlohmann::json data;
-    data["Status"] = res.status;
+    data["RoomId"] = res.roomId;
     std::string jsonStr = data.dump();
     getSizeIntoBuffer(jsonStr.length(), buffer);
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
@@ -110,6 +110,21 @@ Buffer JsonResponsePacketSerializer::serializeResponse(AddUserResponse& res)
     buffer.push_back(static_cast<unsigned char>(MessageCode::ADD_USER_TO_ROOM));
     nlohmann::json data;
     data["Status"] = res.status;
+    data["UserToAccept"] = res.userToAccept;
+    data["roomId"] = res.roomId;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
+Buffer JsonResponsePacketSerializer::serializeResponse(AcceptUserResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::ACCEPT_USER));
+    nlohmann::json data;
+    data["Status"] = res.status;
+    data["RoomId"] = res.roomId;
     std::string jsonStr = data.dump();
     getSizeIntoBuffer(jsonStr.length(), buffer);
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
@@ -146,6 +161,18 @@ Buffer JsonResponsePacketSerializer::serializeResponse(AddPaintToRoomResponse& r
     buffer.push_back(static_cast<unsigned char>(MessageCode::ADD_PAINT_TO_ROOM));
     nlohmann::json data;
     data["Status"] = res.status;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
+Buffer JsonResponsePacketSerializer::serializeResponse(GetUsersInRoomResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::GET_USERS_IN_ROOM));
+    nlohmann::json data;
+    data["usersInRoom"] = res.usersInRoom;
     std::string jsonStr = data.dump();
     getSizeIntoBuffer(jsonStr.length(), buffer);
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());

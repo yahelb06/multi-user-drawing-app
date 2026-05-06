@@ -30,6 +30,7 @@ public:
 	bool doesCurrentPaint(const std::string& paintName);
 	std::string GetRoomId() const;
 	LoggedUser GetRoomManager() const;
+	std::vector<std::string> getUserInRoom() const;
 
 	void setPaint(const Paint& paint);
 	void setUserToWaitingRoom(const LoggedUser& user);
@@ -37,7 +38,7 @@ public:
 
 	void stopJoinRequest(const LoggedUser& user);
 	bool removePaint(const LoggedUser& manager, const std::string& paintName);
-	bool addPaint(const LoggedUser& manager, const std::string& paintName, const std::map<Line, std::string>& LinesInPaint);
+	bool addPaint(const LoggedUser& manager, const std::string& paintName, const std::vector<Line>& LinesInPaint);
 	
 	bool addUserToRoom(const LoggedUser& manager, const LoggedUser& userToAdd, const bool& accept);
 	bool exitRoom(const LoggedUser& user);

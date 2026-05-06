@@ -41,6 +41,19 @@ LoggedUser Room::GetRoomManager() const
     return this->_userInTheRoom[0];
 }
 
+std::vector<std::string> Room::getUserInRoom() const
+{
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
+    std::vector<std::string> usernamesVec;
+    for (const auto& username : this->_userInTheRoom)
+    {
+
+        std::string name = username.getUserName();
+        usernamesVec.push_back(name);
+    }
+    return usernamesVec;
+}
+
 void Room::setPaint(const Paint& paint)
 {
     this->_paint = paint;

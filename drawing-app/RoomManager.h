@@ -45,7 +45,7 @@ public:
 
 	std::vector<Room>::iterator FindRoom(const std::string& roomId) const;
 
-	void CreateRoom(const LoggedUser& user);
+	std::string CreateRoom(const LoggedUser& user);
 	JoinRoomStatus JoinRoom(const LoggedUser& user, const std::string& roomId);
 	RoomLogOutStatus LogOut(const LoggedUser& user, const std::string& roomId);
 	AddUserStatus AddUser(const LoggedUser& manager, const LoggedUser& userToAdd, const std::string& roomId, const bool& accept);
@@ -53,4 +53,5 @@ public:
 
 	PaintRoomStatus RemovePaint(const std::string& manager, const std::string& roomId, const std::string& paintName);
 	PaintRoomStatus AddPaint(const std::string& manager, const std::string& roomId, const std::string& paintName, const std::vector<Line>& LinesInPaint);
+	std::vector<Room> getRooms() const;
 };

@@ -58,6 +58,12 @@ struct AddUserRequest
 	bool accept;
 };
 
+struct AcceptUserRequest
+{
+	std::string userToAccept;
+	std::string roomId;
+};
+
 struct RemoveUserFromRoomRequest
 {
 	std::string manager;
@@ -81,6 +87,11 @@ struct AddPaintToRoomRequest
 {
 	PaintRoomData data;
 	std::vector<Line> LinesInPaint;
+};
+
+struct GetUsersInRoomRequest
+{
+	std::string 
 };
 
 class IRequestHandler

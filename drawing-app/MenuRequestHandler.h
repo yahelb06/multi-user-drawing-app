@@ -24,7 +24,9 @@ private:
 	RequestResult CreateRoom(const RequestInfo& info);
 	RequestResult JoinRoom(const RequestInfo& info);
 	RequestResult AddUser(const RequestInfo& info);
+	RequestResult AcceptUser(const RequestInfo& info);
 	RequestResult RemoveUserFromRoom(const RequestInfo& info);
 	RequestResult RemovePaintFromRoom(const RequestInfo& info);
 	RequestResult AddPaintToRoom(const RequestInfo& info);
+	RequestResult GetRooms(const RequestInfo& info);
 };

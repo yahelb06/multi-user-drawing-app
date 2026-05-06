@@ -12,11 +12,12 @@ std::vector<Room>::iterator RoomManager::FindRoom(const std::string& roomId) con
         });
 }
 
-void RoomManager::CreateRoom(const LoggedUser& user)
+std::string RoomManager::CreateRoom(const LoggedUser& user)
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
     Room userRoom(user);
     this->m_RoomOpen.push_back(userRoom);
+    return userRoom.GetRoomId();
 }
 
 JoinRoomStatus RoomManager::JoinRoom(const LoggedUser& user, const std::string& roomId)
@@ -126,4 +127,10 @@ PaintRoomStatus RoomManager::AddPaint(const std::string& manager, const std::str
         return PaintRoomStatus::FAILED;
     }
     return PaintRoomStatus::ROOM_NOT_FOUND;
+}
+
+std::vector<Room> RoomManager::getRooms() const
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    return this->m_RoomOpen;
 }
