@@ -134,3 +134,10 @@ std::vector<Room> RoomManager::getRooms() const
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
     return this->m_RoomOpen;
 }
+
+std::vector<std::string> RoomManager::getUsersInRoom(const std::string& roomId) const
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+    return it->getUserInRoom();
+}

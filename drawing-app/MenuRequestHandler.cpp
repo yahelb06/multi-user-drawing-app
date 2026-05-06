@@ -162,6 +162,7 @@ RequestResult MenuRequestHandler::AcceptUser(const RequestInfo& info)
 	AcceptUserResponse acceptUser;
 	acceptUser.status = 1;
 	acceptUser.roomId = req.roomId;
+	acceptUser.usersInRoom = this->m_handlerFactory.getRoomManager().getUsersInRoom(acceptUser.roomId);
 
 	res.response = JsonResponsePacketSerializer::serializeResponse(acceptUser);
 	//res.newHandler  = room

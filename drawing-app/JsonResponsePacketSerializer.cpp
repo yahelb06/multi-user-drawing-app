@@ -125,6 +125,7 @@ Buffer JsonResponsePacketSerializer::serializeResponse(AcceptUserResponse& res)
     nlohmann::json data;
     data["Status"] = res.status;
     data["RoomId"] = res.roomId;
+    data["UsersInRoom"] = res.usersInRoom;
     std::string jsonStr = data.dump();
     getSizeIntoBuffer(jsonStr.length(), buffer);
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());

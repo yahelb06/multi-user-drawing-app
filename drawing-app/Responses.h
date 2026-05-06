@@ -52,6 +52,7 @@ struct AcceptUserResponse
 {
 	unsigned int status;
 	std::string roomId;
+	std::vector<std::string> usersInRoom;
 };
 
 struct RemoveUserFromRoomResponse

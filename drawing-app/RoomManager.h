@@ -54,4 +54,5 @@ public:
 	PaintRoomStatus RemovePaint(const std::string& manager, const std::string& roomId, const std::string& paintName);
 	PaintRoomStatus AddPaint(const std::string& manager, const std::string& roomId, const std::string& paintName, const std::vector<Line>& LinesInPaint);
 	std::vector<Room> getRooms() const;
+	std::vector<std::string> getUsersInRoom(const std::string& roomId) const;
 };

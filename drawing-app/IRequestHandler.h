@@ -89,11 +89,6 @@ struct AddPaintToRoomRequest
 	std::vector<Line> LinesInPaint;
 };
 
-struct GetUsersInRoomRequest
-{
-	std::string 
-};
-
 class IRequestHandler
 {
 public:
