@@ -10,6 +10,7 @@ int main()
 		SqliteDatabase db;
 		RequestHandlerFactory factory(&db);
 		Server myServer(factory);
+		factory.SetServer(&myServer);
 
 		std::thread t(&Server::startHandleRequest, &myServer);
 		std::cout << "Server is running\n";

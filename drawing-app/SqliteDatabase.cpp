@@ -180,3 +180,55 @@ int SqliteDatabase::getPaintId(const std::string& name, const std::string& paint
 	sqlite3_finalize(stmt);
 	return paintId;
 }
+
+std::vector<std::string> SqliteDatabase::GetUserPaintsName(const std::string name) const
+{
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
+	sqlite3_stmt* stmt;
+	std::vector<std::string> PaintName;
+	std::string sqlStatement = "SELECT PAINT_NAME FROM PAINTS "
+		"WHERE USERNAME = ?;";
+
+	int res = sqlite3_prepare_v2(this->_db, sqlStatement.c_str(), -1, &stmt, nullptr);
+
+	if (res != SQLITE_OK)
+	{
+		sqlite3_finalize(stmt);
+		throw (std::string(sqlite3_errmsg(this->_db)));
+	}
+	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
+	while (sqlite3_step(stmt) == SQLITE_ROW)
+	{
+		PaintName.push_back(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
+	}
+	sqlite3_finalize(stmt);
+	return PaintName;
+}
+
+Paint SqliteDatabase::GetPaint(const int& paintId, const std::string& paintName) const
+{
+	std::lock_guard<std::mutex> lock(this->_dbMutex);
+	sqlite3_stmt* stmt;
+	std::vector<Line> paintLines;
+	std::string sqlStatement = "SELECT * FROM PAINT_LINES "
+		"WHERE PAINT_ID = ?";
+	int res = sqlite3_prepare_v2(this->_db, sqlStatement.c_str(), -1, &stmt, nullptr);
+
+	if (res != SQLITE_OK)
+	{
+		sqlite3_finalize(stmt);
+		throw (std::string(sqlite3_errmsg(this->_db)));
+	}
+	sqlite3_bind_int(stmt, 1, paintId);
+	while (sqlite3_step(stmt) == SQLITE_ROW)
+	{
+		Coordinates start(static_cast<unsigned int>(sqlite3_column_int(stmt, 2)), static_cast<unsigned int>(sqlite3_column_int(stmt, 3)));
+		Coordinates end(static_cast<unsigned int>(sqlite3_column_int(stmt, 4)), static_cast<unsigned int>(sqlite3_column_int(stmt, 5)));
+		std::string color(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6)));
+		std::pair<Coordinates, Coordinates> lineCore(start, end);
+		Line line(lineCore, color);
+		paintLines.push_back(line);
+	}
+	sqlite3_finalize(stmt);
+	return Paint(paintLines, paintName);
+}

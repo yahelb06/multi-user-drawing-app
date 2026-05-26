@@ -18,7 +18,9 @@ private:
 	std::string _color;
 
 public:
+	Line() = default;
 	Line(const std::pair<Coordinates, Coordinates>& line, const std::string& color);
 
 	std::pair<Coordinates, Coordinates> getLine() const;
+	std::string getColor() const;
 };

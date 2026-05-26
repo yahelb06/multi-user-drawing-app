@@ -9,6 +9,11 @@ std::pair<Coordinates, Coordinates> Line::getLine() const
     return this->_line;
 }
 
+std::string Line::getColor() const
+{
+    return this->_color;
+}
+
 Coordinates::Coordinates(unsigned int x, unsigned int y) : coordinates(std::make_pair(x, y ))
 {
 }

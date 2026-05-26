@@ -1,0 +1,112 @@
+﻿<Window x:Class="drawing_app_client.SignUpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:drawing_app_client"
+        mc:Ignorable="d"
+        Title="Sign Up - Paint With Friends" Height="550" Width="400"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" 
+        WindowStartupLocation="CenterScreen"
+        FlowDirection="RightToLeft">
+
+    <Border Background="#FDF5E6" CornerRadius="20">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15" Direction="0" ShadowDepth="0" Color="#D2B48C" Opacity="0.5"/>
+        </Border.Effect>
+
+        <Grid Margin="35">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,15">
+                <Button Content="✕" Click="CloseButton_Click" HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Background="Transparent" BorderThickness="0" Foreground="#8B7355" 
+                        FontSize="22" Cursor="Hand" Margin="0,-10,-10,0"/>
+
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="הרשמה למערכת" FontSize="32" FontWeight="Bold" Foreground="#966859" HorizontalAlignment="Center"/>
+                    <TextBlock Text="צרו חשבון חדש והצטרפו לחברים" FontSize="14" Foreground="#8B7355" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                <TextBlock Text="שם משתמש" Margin="5,5,0,5" Foreground="#5D4037" FontWeight="SemiBold"/>
+                <Border Background="White" CornerRadius="10" Padding="8" BorderBrush="#D2B48C" BorderThickness="1">
+                    <TextBox x:Name="UsernameTextBox" 
+                             BorderThickness="0" 
+                             FontSize="16" 
+                             VerticalContentAlignment="Center" 
+                             Height="30"
+                             Background="Transparent"/>
+                </Border>
+
+                <TextBlock Text="אימייל" Margin="5,15,0,5" Foreground="#5D4037" FontWeight="SemiBold"/>
+                <Border Background="White" CornerRadius="10" Padding="8" BorderBrush="#D2B48C" BorderThickness="1">
+                    <TextBox x:Name="EmailTextBox" 
+                             BorderThickness="0" 
+                             FontSize="16" 
+                             VerticalContentAlignment="Center" 
+                             Height="30"
+                             Background="Transparent"/>
+                </Border>
+
+                <TextBlock Text="סיסמה" Margin="5,15,0,5" Foreground="#5D4037" FontWeight="SemiBold"/>
+                <Border Background="White" CornerRadius="10" Padding="8" BorderBrush="#D2B48C" BorderThickness="1">
+                    <PasswordBox x:Name="PasswordBox" 
+                                 BorderThickness="0" 
+                                 FontSize="16" 
+                                 VerticalContentAlignment="Center" 
+                                 Height="30"
+                                 Background="Transparent"/>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Margin="0,15,0,0">
+                <Button x:Name="SignUpBtn" 
+                        Content="צור משתמש" 
+                        Click="SignUp_Click" 
+                        Height="50" 
+                        Background="#966859" 
+                        Foreground="White" 
+                        FontWeight="Bold" 
+                        FontSize="18" 
+                        Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Style.Setters>
+                                <Setter Property="CornerRadius" Value="12"/>
+                            </Style.Setters>
+                        </Style>
+                    </Button.Resources>
+                    <Button.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.3"/>
+                    </Button.Effect>
+                </Button>
+
+                <Button Content="חזור לכניסה" 
+                        Click="BackToLogin_Click"
+                        Margin="0,15,0,0" 
+                        Height="45"
+                        Background="Transparent" 
+                        BorderBrush="#966859"
+                        BorderThickness="1" 
+                        Foreground="#966859" 
+                        FontWeight="SemiBold"
+                        FontSize="15"
+                        Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Style.Setters>
+                                <Setter Property="CornerRadius" Value="12"/>
+                            </Style.Setters>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

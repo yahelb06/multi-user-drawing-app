@@ -43,6 +43,16 @@ void Server::startHandleRequest()
 	}
 }
 
+void Server::updateClientHandler(SOCKET clientSocket, IRequestHandler* newHandler)
+{
+	std::lock_guard<std::mutex> lock(userListMutex);
+	if (m_client.find(clientSocket) != m_client.end())
+	{
+		delete m_client[clientSocket];
+		m_client[clientSocket] = newHandler;
+	}
+}
+
 void Server::bindAndListen(int port) const
 {
 	struct sockaddr_in sa = { 0 };
@@ -87,7 +97,7 @@ void Server::clientHandler(SOCKET clientSocket)
 	std::string users;
 	std::string name;
 	int userMsgSize;
-	IRequestHandler* handler = nullptr;
+	IRequestHandler* currentHandler = nullptr;
 	try
 	{
 		while (true)
@@ -98,20 +108,37 @@ void Server::clientHandler(SOCKET clientSocket)
 				throw std::exception();
 			}
 			buffer[userMsgSize] = '\0';
+			std::cout << buffer << "\n";
 			Buffer vecBuffer;
 			vecBuffer.insert(vecBuffer.begin(), buffer + START_OF_DATA, buffer + userMsgSize);
-			for (auto& a : vecBuffer)
-			{
-				std::cout << a;
-			}
-			std::cout << "\n";
-			RequestInfo info = { buffer[0], time_t(), vecBuffer };
+			RequestInfo info = { buffer[0], time_t(), vecBuffer, clientSocket };
 			{
 				std::lock_guard<std::mutex> lock(userListMutex);
-				handler = m_client[clientSocket];
+				if (m_client.find(clientSocket) != m_client.end())
+				{
+					currentHandler = m_client[clientSocket];
+				}
 			}
-			RequestResult res = handler->handlerRequest(info);
+			if (currentHandler == nullptr)
+			{
+				return;
+			}
+			RequestResult res = currentHandler->handlerRequest(info);
+			if (res.newHandler != currentHandler)
+			{
+				std::lock_guard<std::mutex> lock(userListMutex);
 
+				if (m_client.find(clientSocket) != m_client.end())
+				{
+					delete currentHandler;
+					this->m_client[clientSocket] = res.newHandler;
+				}
+			}
+			for (auto& ch : res.response)
+			{
+				std::cout << ch;
+			}
+			std::cout << "\n\n\n";
 			send(clientSocket, reinterpret_cast<const char*>(res.response.data()), res.response.size(), 0);
 		
 		}

@@ -1,0 +1,84 @@
+﻿<Window x:Class="DrawingApp.MenuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Menu" Height="600" Width="900"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        FlowDirection="RightToLeft">
+
+    <Border Background="#FDF5E6" CornerRadius="20">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" Direction="0" ShadowDepth="0" Color="#D2B48C" Opacity="0.4"/>
+        </Border.Effect>
+
+        <Grid Margin="40">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header מעודכן עם צבעים הרמוניים -->
+            <Grid Grid.Row="0">
+                <Button Content="✕" Click="ExitButtonClick" 
+                        Background="Transparent" BorderThickness="0" Foreground="#8B7355" 
+                        FontSize="22" Cursor="Hand" VerticalAlignment="Center" Margin="800,0,0,0"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <TextBlock Text="שלום, " FontSize="22" FontWeight="SemiBold" Foreground="#966859" VerticalAlignment="Center"/>
+
+                    <TextBlock x:Name="UserNameLabel" Text="אורח" FontSize="22" FontWeight="Bold" Foreground="#966859" VerticalAlignment="Center"/>
+
+                    <!-- שינוי רקע האייקון שיתאים לשם -->
+                    <Border Width="45" Height="45" Background="#966859" CornerRadius="22.5" Margin="15,0,0,0">
+                        <TextBlock Text="👤" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="20"/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <UniformGrid Grid.Row="1" Columns="2" Margin="0,40,0,0">
+                <!-- כפתור צור חדר -->
+                <Button Margin="20" Cursor="Hand" Click = "CreateRoomClick">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" CornerRadius="25" BorderThickness="0" ClipToBounds="True">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="Images/createRoomImage.jpg" Stretch="UniformToFill" />
+                                </Border.Background>
+                                <Grid Background="#88000000">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="➕" FontSize="60" HorizontalAlignment="Center" Margin="0,0,0,10" Foreground="White"/>
+                                        <TextBlock Text="צור חדר חדש" FontSize="26" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="תהיה המארח ותזמין חברים" FontSize="15" Foreground="#EEE" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <!-- כפתור הצטרף לחדר -->
+                <Button Margin="20" Cursor="Hand" Click="JoinRoomClick">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" CornerRadius="25" BorderThickness="0" ClipToBounds="True">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="Images/joinRoomImage.jpg" Stretch="UniformToFill" />
+                                </Border.Background>
+                                <Grid Background="#88000000">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="🎨" FontSize="60" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                        <TextBlock Text="הצטרף לחדר" FontSize="26" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="כנס לחדר קיים של חברים" FontSize="15" Foreground="#DDD" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </UniformGrid>
+        </Grid>
+    </Border>
+</Window>

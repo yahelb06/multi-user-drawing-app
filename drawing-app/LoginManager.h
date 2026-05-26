@@ -34,14 +34,16 @@ class LoginManager
 {
 public:
 	LoginManager(IDatabase* m_database);
-	LoginStatus login(const std::string& name, const std::string& pass);
-	SignUpStatus signup(const std::string& name, const std::string& pass, const std::string& mail);
-	UserLogOutStatus logout(const std::string& name);
-	RemoveStatus Remove(const std::string& name);
+	LoginStatus login(const std::string& name, const std::string& pass, SOCKET clientSocket);
+	SignUpStatus signup(const std::string& name, const std::string& pass, const std::string& mail, SOCKET clientSocket);
+	UserLogOutStatus logout(const std::string& name, SOCKET clientSocket);
+	RemoveStatus Remove(const std::string& name, SOCKET clientSocket);
+
+	SOCKET getSocketByUsername(const std::string& name) const;
 
 private:
-	bool isUserLoggedIn(const std::string& name) const;
-	UserLogOutStatus privateLogout(const std::string& name);
+	bool isUserLoggedIn(const std::string& name);
+	UserLogOutStatus privateLogout(const std::string& name, SOCKET clientSocket);
 
 	mutable std::mutex _loggedUser_mutex;
 	IDatabase* m_database;

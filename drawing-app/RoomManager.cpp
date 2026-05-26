@@ -4,20 +4,20 @@ RoomManager::RoomManager(IDatabase* database) : m_database(database)
 {
 }
 
-std::vector<Room>::iterator RoomManager::FindRoom(const std::string& roomId) const
+std::vector<Room>::iterator RoomManager::FindRoom(const std::string& roomId)
 {
     const auto& it = std::find_if(m_RoomOpen.begin(), m_RoomOpen.end(), [&](const Room& r)
         {
             return r.GetRoomId() == roomId;
         });
+    return it;
 }
 
 std::string RoomManager::CreateRoom(const LoggedUser& user)
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
-    Room userRoom(user);
-    this->m_RoomOpen.push_back(userRoom);
-    return userRoom.GetRoomId();
+    this->m_RoomOpen.emplace_back(user);
+    return this->m_RoomOpen.back().GetRoomId();
 }
 
 JoinRoomStatus RoomManager::JoinRoom(const LoggedUser& user, const std::string& roomId)
@@ -86,7 +86,7 @@ RoomLogOutStatus RoomManager::RemoveUserFromRoom(const LoggedUser& manager, cons
     return RoomLogOutStatus::ROOM_CLOSED;
 }
 
-PaintRoomStatus RoomManager::RemovePaint(const std::string& manager, const std::string& roomId, const std::string& paintName)
+PaintRoomStatus RoomManager::RemovePaint(const LoggedUser& manager, const std::string& roomId, const std::string& paintName)
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
     const auto& it = FindRoom(roomId);
@@ -97,7 +97,7 @@ PaintRoomStatus RoomManager::RemovePaint(const std::string& manager, const std::
         //if the paint to remove is the paint right now
         if (it->doesCurrentPaint(paintName))
         {
-            int paintId = this->m_database->getPaintId(manager, paintName);
+            int paintId = this->m_database->getPaintId(manager.getUserName(), paintName);
             if (it->removePaint(manager, paintName))
             {
                 return PaintRoomStatus::SUCCESS;
@@ -108,7 +108,7 @@ PaintRoomStatus RoomManager::RemovePaint(const std::string& manager, const std::
     return PaintRoomStatus::ROOM_NOT_FOUND;
 }
 
-PaintRoomStatus RoomManager::AddPaint(const std::string& manager, const std::string& roomId, const std::string& paintName, const std::vector<Line>& LinesInPaint)
+PaintRoomStatus RoomManager::UploadPaint(const LoggedUser& manager, const std::string& roomId, const Paint& paint)
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
     const auto& it = FindRoom(roomId);
@@ -116,28 +116,66 @@ PaintRoomStatus RoomManager::AddPaint(const std::string& manager, const std::str
     //found the room
     if (it != this->m_RoomOpen.end())
     {
-        //if there is paint right now in the room
-        if (!it->doesHavePaint())
+        if (it->addPaint(manager, paint.getPaintName(), paint.getPaintLines()))
         {
-            if (it->addPaint(manager, paintName, LinesInPaint))
-            {
-                return PaintRoomStatus::SUCCESS;
-            }
+            return PaintRoomStatus::SUCCESS;
         }
-        return PaintRoomStatus::FAILED;
     }
     return PaintRoomStatus::ROOM_NOT_FOUND;
 }
 
-std::vector<Room> RoomManager::getRooms() const
+std::vector<Room>& RoomManager::getRooms()
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
     return this->m_RoomOpen;
 }
 
-std::vector<std::string> RoomManager::getUsersInRoom(const std::string& roomId) const
+std::vector<std::string> RoomManager::getUsersInRoom(const std::string& roomId)
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
     const auto& it = FindRoom(roomId);
     return it->getUserInRoom();
+}
+
+std::vector<std::string> RoomManager::getUserPaintsName(const std::string name) const
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    return this->m_database->GetUserPaintsName(name);
+}
+
+Paint RoomManager::GetPaint(const std::string& username, const std::string& paintName)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    int paintId = this->m_database->getPaintId(username, paintName);
+    return this->m_database->GetPaint(paintId, paintName);
+}
+
+AddLinesToPaintStatus RoomManager::AddLinesToPaint(const std::string& roomId, const std::string& manager, const std::vector<Line>& linesToAdd)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room
+    if (it != this->m_RoomOpen.end())
+    {
+        if (it->AddLinesToPaint(linesToAdd))
+        {
+            return AddLinesToPaintStatus::SUCCESS;
+        }
+        return AddLinesToPaintStatus::FAILED;
+    }
+    return AddLinesToPaintStatus::ROOM_NOT_FOUND;
+}
+
+std::vector<Line> RoomManager::GetPaintFromRoom(const std::string& roomId)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room
+    if (it != this->m_RoomOpen.end())
+    {
+        return it->GetPaint().getPaintLines();
+    }
+    throw std::runtime_error("Room not found");
 }

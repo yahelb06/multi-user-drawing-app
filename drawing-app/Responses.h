@@ -1,5 +1,6 @@
 #pragma once
 #include "Pch.h"
+#include "Line.h"
 
 struct ErrResponse
 {
@@ -65,13 +66,28 @@ struct RemovePaintFromRoomResponse
 	unsigned int status;
 };
 
-struct AddPaintToRoomResponse
+struct UploadPaintToRoomResponse
 {
-	unsigned int status;
-
+	std::vector<Line> paintLines;
 };
 
 struct GetUsersInRoomResponse
 {
 	std::vector <std::string> usersInRoom;
+};
+
+struct GetUserPaintsNameResponse
+{
+	unsigned int status;
+	std::vector<std::string> paintsName;
+};
+
+struct AddLinesToPaintResponse
+{
+	unsigned int status;
+};
+
+struct GetPaintFromRoomResponse
+{
+	std::vector<Line> vecLines;
 };

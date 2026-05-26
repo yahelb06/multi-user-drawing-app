@@ -27,6 +27,8 @@ RequestResult LoginRequestHandler::handlerRequest(RequestInfo& info)
         ErrResponse err;
         err.message = "Request failed, Illegal message code.";
         res.response = JsonResponsePacketSerializer::serializeResponse(err);
+        res.newHandler = m_handlerFactory.CreateLoginRequest();
+        return res;
     }
     else if (code == MessageCode::LOGIN_REQUEST)
     {
@@ -52,7 +54,7 @@ RequestResult LoginRequestHandler::Login(RequestInfo& info)
 
     LoginRequest req = JsonRequestPacketDeserializer::deserializeLoginRequest(info.buffer);
 
-    LoginStatus status = static_cast<LoginStatus>(this->m_handlerFactory.getLoginManager().login(req.username, req.password));
+    LoginStatus status = static_cast<LoginStatus>(this->m_handlerFactory.getLoginManager().login(req.username, req.password, info.socket));
 
     if (status == LoginStatus::LOGIN_SUCCESS)
     {
@@ -85,7 +87,7 @@ RequestResult LoginRequestHandler::SignUp(RequestInfo& info)
     SignUpRequest req = JsonRequestPacketDeserializer::deserializeSignUpRequest(info.buffer);
     
     SignUpStatus status;
-    status = static_cast<SignUpStatus>(this->m_handlerFactory.getLoginManager().signup(req.username, req.password, req.mail));
+    status = static_cast<SignUpStatus>(this->m_handlerFactory.getLoginManager().signup(req.username, req.password, req.mail, info.socket));
     if (status == SignUpStatus::SIGNUP_SUCCESS)
     {
         SignUpResponse signUp;
@@ -115,7 +117,7 @@ RequestResult LoginRequestHandler::LogOut(RequestInfo& info)
     RequestResult res;
 
     UserLogOutRequest req = JsonRequestPacketDeserializer::deserializeLogOutUserRequest(info.buffer);
-    UserLogOutStatus status = static_cast<UserLogOutStatus>(this->m_handlerFactory.getLoginManager().logout(req.username));
+    UserLogOutStatus status = static_cast<UserLogOutStatus>(this->m_handlerFactory.getLoginManager().logout(req.username, info.socket));
 
     if (status == UserLogOutStatus::LOG_OUT_SUCCESS)
     {
@@ -142,7 +144,7 @@ RequestResult LoginRequestHandler::Remove(RequestInfo& info)
     RemoveUserRequest req = JsonRequestPacketDeserializer::deserializeRemoveUserRequest(info.buffer);
     
     RemoveStatus status;
-    status = static_cast<RemoveStatus>(this->m_handlerFactory.getLoginManager().Remove(req.username));
+    status = static_cast<RemoveStatus>(this->m_handlerFactory.getLoginManager().Remove(req.username, info.socket));
 
     if (status == RemoveStatus::REMOVE_SUCCESS)
     {

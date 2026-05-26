@@ -23,6 +23,15 @@ public:
 	static Buffer serializeResponse(AcceptUserResponse& res);
 	static Buffer serializeResponse(RemoveUserFromRoomResponse& res);
 	static Buffer serializeResponse(RemovePaintFromRoomResponse& res);
-	static Buffer serializeResponse(AddPaintToRoomResponse& res);
+	static Buffer serializeResponse(UploadPaintToRoomResponse& res);
 	static Buffer serializeResponse(GetUsersInRoomResponse& res);
+	static Buffer serializeResponse(GetUserPaintsNameResponse& res);
+	static Buffer serializeResponse(AddLinesToPaintResponse& res);
+	static Buffer serializeResponse(GetPaintFromRoomResponse& res);
+
+	static Buffer serializeResponse(const std::string& userToAdd);
+
+private:
+	static nlohmann::json getLinesVec(const std::vector<Line>& vecLines);
+
 };

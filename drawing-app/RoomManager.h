@@ -2,6 +2,7 @@
 #include "Pch.h"
 #include "IDatabase.h"
 #include "Room.h"
+#include "Paint.h"
 
 enum class JoinRoomStatus : unsigned int
 {
@@ -30,6 +31,13 @@ enum class PaintRoomStatus : unsigned int
 	ROOM_NOT_FOUND
 };
 
+enum class AddLinesToPaintStatus : unsigned int
+{
+	SUCCESS = 1,
+	FAILED,
+	ROOM_NOT_FOUND,
+};
+
 
 class RoomManager
 {
@@ -40,10 +48,11 @@ private:
 	mutable std::mutex m_roomManager_mutex;
 
 
+
 public:
 	RoomManager(IDatabase* database);
 
-	std::vector<Room>::iterator FindRoom(const std::string& roomId) const;
+	std::vector<Room>::iterator FindRoom(const std::string& roomId);
 
 	std::string CreateRoom(const LoggedUser& user);
 	JoinRoomStatus JoinRoom(const LoggedUser& user, const std::string& roomId);
@@ -51,8 +60,14 @@ public:
 	AddUserStatus AddUser(const LoggedUser& manager, const LoggedUser& userToAdd, const std::string& roomId, const bool& accept);
 	RoomLogOutStatus RemoveUserFromRoom(const LoggedUser& manager, const LoggedUser& userToRemove, const std::string& roomId);
 
-	PaintRoomStatus RemovePaint(const std::string& manager, const std::string& roomId, const std::string& paintName);
-	PaintRoomStatus AddPaint(const std::string& manager, const std::string& roomId, const std::string& paintName, const std::vector<Line>& LinesInPaint);
-	std::vector<Room> getRooms() const;
-	std::vector<std::string> getUsersInRoom(const std::string& roomId) const;
+	PaintRoomStatus RemovePaint(const LoggedUser& manager, const std::string& roomId, const std::string& paintName);
+	PaintRoomStatus UploadPaint(const LoggedUser& manager, const std::string& roomId, const Paint& paint);
+	std::vector<Room>& getRooms();
+	std::vector<std::string> getUsersInRoom(const std::string& roomId);
+	std::vector<std::string> getUserPaintsName(const std::string name) const;
+	Paint GetPaint(const std::string& username, const std::string& paintName);
+
+	AddLinesToPaintStatus AddLinesToPaint(const std::string& roomId, const std::string& manager, const std::vector<Line>& linesToAdd);
+
+	std::vector<Line> GetPaintFromRoom(const std::string& roomId);
 };

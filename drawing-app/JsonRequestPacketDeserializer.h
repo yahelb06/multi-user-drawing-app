@@ -17,7 +17,10 @@ public:
 	static AddUserRequest deserializeAddUserRequest(const Buffer& buffer);
 	static RemoveUserFromRoomRequest deserializeRemoveUserFromRoomRequest(const Buffer& buffer);
 	static RemovePaintFromRoomRequest deserializeRemovePaintFromRoomRequest(const Buffer& buffer);
-	static AddPaintToRoomRequest deserializeAddPaintToRoomRequest(const Buffer& buffer);
+	static UploadPaintToRoomRequest deserializeUploadPaintToRoomRequest(const Buffer& buffer);
+	static GetUserPaintsNameRequest deserializeGetUserPaintsRequest(const Buffer& buffer);
+	static AddLineToPaintRequest deserialAddLineToPaintRequest(const Buffer& buffer);
+	static GetPaintFromRoomRequest deserialGetPaintFromRoomRequest(const Buffer& buffer);
 
 private:
 	static std::vector<Line> getLines(const nlohmann::json& arr);

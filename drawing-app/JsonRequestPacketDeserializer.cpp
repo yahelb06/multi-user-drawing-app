@@ -92,14 +92,49 @@ RemovePaintFromRoomRequest JsonRequestPacketDeserializer::deserializeRemovePaint
 	return req;
 }
 
-AddPaintToRoomRequest JsonRequestPacketDeserializer::deserializeAddPaintToRoomRequest(const Buffer& buffer)
+UploadPaintToRoomRequest JsonRequestPacketDeserializer::deserializeUploadPaintToRoomRequest(const Buffer& buffer)
 {
 	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
-	AddPaintToRoomRequest req;
+	UploadPaintToRoomRequest req;
 	req.data.manager = json["manager"].get<std::string>();
 	req.data.paintName = json["paintName"].get<std::string>();
 	req.data.roomId = json["roomId"].get<std::string>();
-	req.LinesInPaint = getLines(json["LinesInPaint"]);
+	return req;
+}
+
+GetUserPaintsNameRequest JsonRequestPacketDeserializer::deserializeGetUserPaintsRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	GetUserPaintsNameRequest req;
+	req.paintName = json["name"].get<std::string>();
+	return req;
+}
+
+AddLineToPaintRequest JsonRequestPacketDeserializer::deserialAddLineToPaintRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	AddLineToPaintRequest req;
+	req.manager = json["manager"].get<std::string>();
+	req.roomId = json["roomId"].get<std::string>();
+	auto linesJson = json["line"];
+
+	for (const auto& lineJson : linesJson)
+	{
+		Coordinates start(lineJson["start"]["x"].get<unsigned int>(), lineJson["start"]["y"].get<unsigned int>());
+		Coordinates end(lineJson["end"]["x"].get<unsigned int>(), lineJson["end"]["y"].get<unsigned int>());
+		std::string color = lineJson["color"].get<std::string>();
+
+		std::pair<Coordinates, Coordinates> lineCore(start, end);
+		req.linesToAdd.push_back(Line(lineCore, color));
+	}
+	return req;
+}
+
+GetPaintFromRoomRequest JsonRequestPacketDeserializer::deserialGetPaintFromRoomRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	GetPaintFromRoomRequest req;
+	req.roomId = json["roomId"];
 	return req;
 }
 

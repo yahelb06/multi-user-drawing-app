@@ -1,0 +1,83 @@
+﻿<Window x:Class="DrawingApp.JoinRoomWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Join Room" Height="450" Width="800"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        FlowDirection="RightToLeft">
+
+    <Border Background="#FDF5E6" CornerRadius="20">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15" Direction="0" ShadowDepth="0" Color="#D2B48C" Opacity="0.5"/>
+        </Border.Effect>
+
+        <Grid Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0">
+                <Button Content="✕" Click="CloseButton_Click" HorizontalAlignment="Right" 
+                        Background="Transparent" BorderThickness="0" Foreground="#8B7355" 
+                        FontSize="22" Cursor="Hand" VerticalAlignment="Center"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <TextBlock Text="שלום, " FontSize="20" FontWeight="SemiBold" Foreground="#966859" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="UserNameLabel" Text="אורח" FontSize="20" FontWeight="Bold" Foreground="#966859" VerticalAlignment="Center"/>
+                    <Border Width="40" Height="40" Background="#966859" CornerRadius="20" Margin="15,0,0,0">
+                        <TextBlock Text="👤" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="18"/>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- תוכן מרכזי -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="400">
+
+                <TextBlock Text="הצטרפות לחדר קיים" 
+                           FontSize="28" 
+                           Foreground="#966859" 
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,30"/>
+
+                <!-- חלק 1: הקלט (יוסתר אחרי לחיצה) -->
+                <StackPanel x:Name="InputControls">
+                    <TextBlock Text="הכנס קוד חדר:" 
+                               FontSize="16" 
+                               Foreground="#8B7355" 
+                               Margin="0,0,0,10"
+                               HorizontalAlignment="Center"/>
+
+                    <Border Background="White" CornerRadius="15" BorderThickness="1" BorderBrush="#D2B48C" Height="50">
+                        <TextBox x:Name="RoomCodeTextBox" Background="Transparent" BorderThickness="0" 
+                                 VerticalContentAlignment="Center" FontSize="18" Padding="15,0" 
+                                 Foreground="#966859" MaxLength="4"/>
+                    </Border>
+
+                    <Button Content="הצטרף עכשיו" Margin="0,25,0,0" Height="45" Width="180" Cursor="Hand"
+                            Background="#966859" Foreground="White" FontSize="18" FontWeight="SemiBold"
+                            Click="JoinRoomClick">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="12"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+
+                <!-- חלק 2: הודעת המתנה (תופיע אחרי לחיצה) -->
+                <StackPanel x:Name="WaitingStatus" Visibility="Collapsed" Margin="0,20,0,0">
+                    <TextBlock Text="⌛" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <TextBlock Text="מחכה לאישור מנהל..." 
+                               FontSize="22" 
+                               Foreground="#966859" 
+                               FontWeight="SemiBold" 
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

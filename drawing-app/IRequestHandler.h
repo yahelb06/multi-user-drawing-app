@@ -8,6 +8,7 @@ struct RequestInfo
 	char id;
 	time_t arrivalTime;
 	Buffer buffer;
+	SOCKET socket;
 };
 
 struct LoginRequest
@@ -58,12 +59,6 @@ struct AddUserRequest
 	bool accept;
 };
 
-struct AcceptUserRequest
-{
-	std::string userToAccept;
-	std::string roomId;
-};
-
 struct RemoveUserFromRoomRequest
 {
 	std::string manager;
@@ -83,10 +78,26 @@ struct RemovePaintFromRoomRequest
 	PaintRoomData data;
 };
 
-struct AddPaintToRoomRequest
+struct UploadPaintToRoomRequest
 {
 	PaintRoomData data;
-	std::vector<Line> LinesInPaint;
+};
+
+struct GetUserPaintsNameRequest
+{
+	std::string paintName;
+};
+
+struct AddLineToPaintRequest
+{
+	std::string manager;
+	std::string roomId;
+	std::vector<Line> linesToAdd;
+};
+
+struct GetPaintFromRoomRequest
+{
+	std::string roomId;
 };
 
 class IRequestHandler

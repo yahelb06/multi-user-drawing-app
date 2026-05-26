@@ -81,6 +81,9 @@
     <ClInclude Include="Paint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RoomReqeustHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Server.cpp">
@@ -129,6 +132,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RoomManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RoomReqeustHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

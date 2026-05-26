@@ -13,6 +13,8 @@ public:
 	~Server();
 	void startHandleRequest();
 
+	void updateClientHandler(SOCKET clientSocket, IRequestHandler* newHandler);
+
 private:
 	
 	void bindAndListen(int port) const;

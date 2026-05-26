@@ -1,6 +1,7 @@
 #include "RequestHandlerFactory.h"
+#include "Server.h"
 
-RequestHandlerFactory::RequestHandlerFactory(IDatabase* database) : m_database(database), m_loginManager(database)
+RequestHandlerFactory::RequestHandlerFactory(IDatabase* database) : m_database(database), m_loginManager(database), m_RoomManager(database)
 {
 }
 
@@ -22,4 +23,19 @@ MenuRequestHandler* RequestHandlerFactory::createMenuRequest()
 RoomManager& RequestHandlerFactory::getRoomManager()
 {
 	return this->m_RoomManager;
+}
+
+RoomRequestHandler* RequestHandlerFactory::CreateRoomRequest()
+{
+	return new RoomRequestHandler(*this);
+}
+
+Server* RequestHandlerFactory::getServer()
+{
+	return this->m_server;
+}
+
+void RequestHandlerFactory::SetServer(Server* server)
+{
+	this->m_server = server;
 }

@@ -15,6 +15,8 @@ public:
 	bool addNewUser(const std::string& name, const std::string& pass, const std::string& mail) override;
 	bool deleteUser(const std::string& name) override;
 	int getPaintId(const std::string& name, const std::string& paintName) override;
+	std::vector<std::string> GetUserPaintsName(const std::string name) const override;
+	Paint GetPaint(const int& paintId, const std::string& paintName) const override;
 
 private:
 

@@ -14,9 +14,12 @@ enum class MessageCode : unsigned char
 	ADD_USER_TO_ROOM = 170,
 	REMOVE_USER_FROM_ROOM = 180,
 	REMOVE_PAINT_FROM_ROOM = 190,
-	ADD_PAINT_TO_ROOM = 200,
+	UPLOAD_PAINT_TO_ROOM = 200,
 	GET_USERS_IN_ROOM = 210,
-	ACCEPT_USER = 220
+	ACCEPT_USER = 220,
+	GET_USER_PAINTS = 230,
+	ADD_LINE_TO_PAINT = 240,
+	GET_PAINT_FROM_ROOM = 250
 };
 
 #define PORT 8826
@@ -24,7 +27,7 @@ enum class MessageCode : unsigned char
 #define DB_FILE_NAME "DB.sqlite"
 #define START_OF_DATA 5
 #define ROOM_ID_LENGTH 6
-#define NO_PAINT_IN_ROOM "no_paint"
+#define NEW_ROOM_PAINT_NAME "new paint"
 
 #pragma comment(lib, "ws2_32.lib")
 #include <iostream>
