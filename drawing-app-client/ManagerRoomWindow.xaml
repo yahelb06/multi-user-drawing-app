@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="חדר ציור משותף" Height="650" Width="950"
+        Title="חדר ציור משותף" Height="680" Width="950"
         WindowStartupLocation="CenterScreen"
         Background="#FDF5E6">
     <Grid Margin="20">
@@ -13,6 +13,30 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- כפתור יציאה בעיצוב עגול -->
+        <Button x:Name="ExitButton" 
+                Content="X" 
+                Grid.Row="0"
+                HorizontalAlignment="Right" 
+                VerticalAlignment="Top" 
+                Width="32" 
+                Height="32"
+                Margin="0,5,5,0"
+                Background="#966859" 
+                Foreground="White"
+                FontWeight="Bold"
+                FontSize="14"
+                BorderThickness="0" 
+                Cursor="Hand"
+                Click="ExitButtonClick">
+            <Button.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="16"/>
+                </Style>
+            </Button.Resources>
+        </Button>
+
+        <!-- פאנל כותרת, פרטי חדר ובחירת צבעים -->
         <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,15">
             <TextBlock Text="לוח הציור שלי" FontSize="24" FontWeight="Bold" Foreground="#966859" HorizontalAlignment="Center"/>
 
@@ -20,14 +44,113 @@
                 <TextBlock Text="Room ID: " FontSize="16" FontWeight="SemiBold" Foreground="#8B7355"/>
                 <TextBlock x:Name="RoomIdTextBlock" Text="0000" FontSize="16" FontWeight="Bold" Foreground="#966859"/>
             </StackPanel>
+
+            <!-- סרגל צבעים מורחב -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                <TextBlock Text="בחר צבע: " FontSize="14" VerticalAlignment="Center" Foreground="#8B7355" Margin="0,0,5,0"/>
+
+                <!-- אדום (מסומן כברירת מחדל עם מסגרת שחורה) -->
+                <Rectangle x:Name="RedColorBox" 
+                           Width="25" Height="25" 
+                           Fill="Red" 
+                           RadiusX="5" RadiusY="5" 
+                           Cursor="Hand" 
+                           Margin="0,0,10,0"
+                           Stroke="Black" StrokeThickness="2"
+                           MouseLeftButtonDown="ColorBox_MouseLeftButtonDown"/>
+
+                <!-- ירוק -->
+                <Rectangle x:Name="GreenColorBox" 
+                           Width="25" Height="25" 
+                           Fill="Green" 
+                           RadiusX="5" RadiusY="5" 
+                           Cursor="Hand"
+                           Margin="0,0,10,0"
+                           Stroke="Transparent" StrokeThickness="2"
+                           MouseLeftButtonDown="ColorBox_MouseLeftButtonDown"/>
+
+                <!-- כחול -->
+                <Rectangle x:Name="BlueColorBox" 
+                           Width="25" Height="25" 
+                           Fill="Blue" 
+                           RadiusX="5" RadiusY="5" 
+                           Cursor="Hand"
+                           Margin="0,0,10,0"
+                           Stroke="Transparent" StrokeThickness="2"
+                           MouseLeftButtonDown="ColorBox_MouseLeftButtonDown"/>
+
+                <!-- צהוב -->
+                <Rectangle x:Name="YellowColorBox" 
+                           Width="25" Height="25" 
+                           Fill="Yellow" 
+                           RadiusX="5" RadiusY="5" 
+                           Cursor="Hand"
+                           Margin="0,0,10,0"
+                           Stroke="Transparent" StrokeThickness="2"
+                           MouseLeftButtonDown="ColorBox_MouseLeftButtonDown"/>
+
+                <!-- כתום -->
+                <Rectangle x:Name="OrangeColorBox" 
+                           Width="25" Height="25" 
+                           Fill="Orange" 
+                           RadiusX="5" RadiusY="5" 
+                           Cursor="Hand"
+                           Margin="0,0,10,0"
+                           Stroke="Transparent" StrokeThickness="2"
+                           MouseLeftButtonDown="ColorBox_MouseLeftButtonDown"/>
+
+                <!-- סגול -->
+                <Rectangle x:Name="PurpleColorBox" 
+                           Width="25" Height="25" 
+                           Fill="Purple" 
+                           RadiusX="5" RadiusY="5" 
+                           Cursor="Hand"
+                           Margin="0,0,10,0"
+                           Stroke="Transparent" StrokeThickness="2"
+                           MouseLeftButtonDown="ColorBox_MouseLeftButtonDown"/>
+
+                <!-- שחור -->
+                <Rectangle x:Name="BlackColorBox" 
+                           Width="25" Height="25" 
+                           Fill="Black" 
+                           RadiusX="5" RadiusY="5" 
+                           Cursor="Hand"
+                           Margin="0,0,10,0"
+                           Stroke="Transparent" StrokeThickness="2"
+                           MouseLeftButtonDown="ColorBox_MouseLeftButtonDown"/>
+            </StackPanel>
+
+            <!-- כפתור שמירה -->
+            <Button x:Name="onSaveButton" 
+                    Content="שמור ציור כתמונה" 
+                    Margin="0,15,0,0" 
+                    Padding="15,6" 
+                    FontSize="14" 
+                    FontWeight="SemiBold" 
+                    Foreground="White" 
+                    Background="#966859" 
+                    Cursor="Hand"
+                    Click="SaveButton_Click">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="8"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
         </StackPanel>
 
+        <!-- אזור ה-Canvas לציור עם אפקט צל -->
         <Border Grid.Row="1" Background="White" CornerRadius="15" BorderBrush="#D2B48C" BorderThickness="2">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="15" Direction="0" ShadowDepth="0" Color="#D2B48C" Opacity="0.3"/>
             </Border.Effect>
 
-            <Canvas x:Name="DrawingCanvas" Background="Transparent" ClipToBounds="True"/>
+            <Canvas x:Name="DrawingCanvas" 
+                    Background="Transparent" 
+                    ClipToBounds="True"
+                    MouseDown="DrawingCanvas_MouseDown"
+                    MouseMove="DrawingCanvas_MouseMove"
+                    MouseUp="DrawingCanvas_MouseUp"/>
         </Border>
     </Grid>
 </Window>

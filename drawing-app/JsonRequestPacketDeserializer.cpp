@@ -96,9 +96,9 @@ UploadPaintToRoomRequest JsonRequestPacketDeserializer::deserializeUploadPaintTo
 {
 	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
 	UploadPaintToRoomRequest req;
-	req.data.manager = json["manager"].get<std::string>();
-	req.data.paintName = json["paintName"].get<std::string>();
-	req.data.roomId = json["roomId"].get<std::string>();
+	req.manager = json["manager"].get<std::string>();
+	req.paint = getPaint(json["paint"]);
+	req.roomId = json["roomId"].get<std::string>();
 	return req;
 }
 
@@ -106,7 +106,7 @@ GetUserPaintsNameRequest JsonRequestPacketDeserializer::deserializeGetUserPaints
 {
 	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
 	GetUserPaintsNameRequest req;
-	req.paintName = json["name"].get<std::string>();
+	req.username = json["username"].get<std::string>();
 	return req;
 }
 
@@ -116,17 +116,7 @@ AddLineToPaintRequest JsonRequestPacketDeserializer::deserialAddLineToPaintReque
 	AddLineToPaintRequest req;
 	req.manager = json["manager"].get<std::string>();
 	req.roomId = json["roomId"].get<std::string>();
-	auto linesJson = json["line"];
-
-	for (const auto& lineJson : linesJson)
-	{
-		Coordinates start(lineJson["start"]["x"].get<unsigned int>(), lineJson["start"]["y"].get<unsigned int>());
-		Coordinates end(lineJson["end"]["x"].get<unsigned int>(), lineJson["end"]["y"].get<unsigned int>());
-		std::string color = lineJson["color"].get<std::string>();
-
-		std::pair<Coordinates, Coordinates> lineCore(start, end);
-		req.linesToAdd.push_back(Line(lineCore, color));
-	}
+	req.linesToAdd = getLines(json["line"]);
 	return req;
 }
 
@@ -134,7 +124,26 @@ GetPaintFromRoomRequest JsonRequestPacketDeserializer::deserialGetPaintFromRoomR
 {
 	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
 	GetPaintFromRoomRequest req;
-	req.roomId = json["roomId"];
+	req.roomId = json["roomId"].get<std::string>();
+	return req;
+}
+
+GetPaintByNameRequest JsonRequestPacketDeserializer::deserialGetPaintByNameRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	GetPaintByNameRequest req;
+	req.user = json["user"].get<std::string>();
+	req.paintName = json["paintName"].get<std::string>();
+	return req;
+}
+
+SavePaintRequest JsonRequestPacketDeserializer::deserialSavePaintRequest(const Buffer& buffer)
+{
+	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
+	SavePaintRequest req;
+	req.roomId = json["roomId"].get<std::string>();
+	req.manager = json["manager"].get<std::string>();
+	req.paintName = json["paintName"].get<std::string>();
 	return req;
 }
 
@@ -145,10 +154,24 @@ std::vector<Line> JsonRequestPacketDeserializer::getLines(const nlohmann::json& 
 
 	for (const auto& line : arr)
 	{
+		double x1 = line["Start"]["X"].get<double>();
+		double y1 = line["Start"]["Y"].get<double>();
+		double x2 = line["End"]["X"].get<double>();
+		double y2 = line["End"]["Y"].get<double>();
+		std::string color = line["ColorHex"].get<std::string>();
+
 		Lines.emplace_back(
-			std::make_pair(Coordinates(arr["x1"], arr["y1"]), Coordinates(arr["x2"], arr["y2"])),
-			arr["color"].get<std::string>()
+			std::make_pair(Coordinates(x1, y1), Coordinates(x2, y2)),
+			color
 		);
 	}
 	return Lines;
+}
+
+Paint JsonRequestPacketDeserializer::getPaint(const nlohmann::json& paintJson)
+{
+	std::string paintName = paintJson["paintName"].get<std::string>();
+	std::vector<Line> lines = getLines(paintJson["lines"]);
+
+	return Paint(lines, paintName);
 }

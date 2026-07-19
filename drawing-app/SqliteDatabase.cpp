@@ -28,10 +28,10 @@ bool SqliteDatabase::open()
 	{
 		std::vector<std::string> sqlStatements = { "CREATE TABLE USERS (NAME TEXT PRIMARY KEY NOT NULL , PASSWORD TEXT NOT NULL , MAIL TEXT NOT NULL UNIQUE);",
 
-		"CREATE TABLE PAINTS (ID INT PRIMARY KEY NOT NULL, USERNAME TEXT NOT NULL, PAINT_NAME TEXT NOT NULL);",
+		"CREATE TABLE PAINTS (ID INTEGER PRIMARY KEY AUTOINCREMENT, USERNAME TEXT NOT NULL, PAINT_NAME TEXT NOT NULL);",
 
-		"CREATE TABLE PAINT_LINES (LINE_ID INT PRIMARY KEY NOT NULL, PAINT_ID INT NOT NULL, START_X INT NOT NULL, START_Y INT NOT NULL, "
-			"END_X INT NOT NULL, END_Y INT NOT NULL, COLOR TEXT NOT NULL, FOREIGN KEY (PAINT_ID) REFERENCES PAINTS(ID);"};
+		"CREATE TABLE PAINT_LINES (LINE_ID INTEGER PRIMARY KEY AUTOINCREMENT, PAINT_ID INT NOT NULL, START_X INT NOT NULL, START_Y INT NOT NULL, "
+			"END_X INT NOT NULL, END_Y INT NOT NULL, COLOR TEXT NOT NULL, FOREIGN KEY (PAINT_ID) REFERENCES PAINTS(ID));"};
 		for (const auto& sqlStatement : sqlStatements)
 		{
 			errMessage = nullptr;
@@ -155,12 +155,12 @@ bool SqliteDatabase::deleteUser(const std::string& name)
 	return sqlite3_changes(this->_db);
 }
 
-int SqliteDatabase::getPaintId(const std::string& name, const std::string& paintName)
+int SqliteDatabase::getPaintId(const std::string& name, const std::string& paintName) const
 {
 	std::lock_guard<std::mutex> lock(this->_dbMutex);
 	sqlite3_stmt* stmt;
 	std::string sqlStatement = "SELECT ID FROM PAINTS "
-		"WHERE NAME = ? AND PAINT_NAME = ?;";
+		"WHERE USERNAME = ? AND PAINT_NAME = ?;";
 	int res = sqlite3_prepare_v2(this->_db, sqlStatement.c_str(), -1, &stmt, nullptr);
 
 	if (res != SQLITE_OK)
@@ -174,7 +174,7 @@ int SqliteDatabase::getPaintId(const std::string& name, const std::string& paint
 	int paintId;
 	if (sqlite3_step(stmt) != SQLITE_ROW)
 	{
-		paintId = -1;
+		return -1;
 	}
 	paintId = sqlite3_column_int(stmt, 0);
 	sqlite3_finalize(stmt);
@@ -231,4 +231,123 @@ Paint SqliteDatabase::GetPaint(const int& paintId, const std::string& paintName)
 	}
 	sqlite3_finalize(stmt);
 	return Paint(paintLines, paintName);
+}
+
+bool SqliteDatabase::savePaint(const std::string& manager, const std::string paintName, const std::vector<Line>& linesToSave) const
+{
+	int paintId = this->getPaintId(manager, paintName);
+	if(NOT_VALID_PAINT_NAME == paintId)
+	{
+		try
+		{
+			this->addPaint(manager, paintName, linesToSave);
+		}
+		catch (const std::string& e)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		sqlite3_stmt* stmt;
+		std::string sqlStatement = "DELETE FROM PAINT_LINES "
+			"WHERE PAINT_ID = ?;";
+		int res = sqlite3_prepare_v2(this->_db, sqlStatement.c_str(), -1, &stmt, nullptr);
+
+		if (res != SQLITE_OK)
+		{
+			sqlite3_finalize(stmt);
+			throw (std::string(sqlite3_errmsg(this->_db)));
+		}
+		sqlite3_bind_int(stmt, 1, paintId);
+		if (sqlite3_step(stmt) == SQLITE_DONE)
+		{
+			try
+			{
+				this->insertLines(paintId, linesToSave);
+				return true;
+			}
+			catch (const std::string& e)
+			{
+				return false;
+			}
+		}
+		return false;
+	}
+}
+
+void SqliteDatabase::addPaint(const std::string& manager, const std::string paintName, const std::vector<Line>& lines) const
+{
+	sqlite3_stmt* stmt;
+	std::string sqlStatement = "INSERT INTO PAINTS (USERNAME, PAINT_NAME) "
+		"VALUES (?, ?);";
+	int res = sqlite3_prepare_v2(this->_db, sqlStatement.c_str(), -1, &stmt, nullptr);
+
+	if (res != SQLITE_OK)
+	{
+		sqlite3_finalize(stmt);
+		throw (std::string(sqlite3_errmsg(this->_db)));
+	}
+	sqlite3_bind_text(stmt, 1, manager.c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, paintName.c_str(), -1, SQLITE_STATIC);
+	res = sqlite3_step(stmt);
+	if (res != SQLITE_DONE)
+	{
+		std::string err = sqlite3_errmsg(this->_db);
+		sqlite3_finalize(stmt);
+		std::cout << err;
+		throw (std::string("SQLite Insert Error: ") + err);
+	}
+	sqlite3_finalize(stmt);
+	//took the id for the new paint
+	sqlite3_int64 paintId = sqlite3_last_insert_rowid(this->_db);
+	try
+	{
+		this->insertLines(paintId, lines);
+	}
+	catch (const std::string& e)
+	{
+		throw;
+	}
+}
+
+void SqliteDatabase::insertLines(const int paintId, const std::vector<Line>& lines) const
+{
+	sqlite3_stmt* stmt;
+	std::string sqlStatement = "INSERT INTO PAINT_LINES (PAINT_ID, START_X, START_Y, END_X, END_Y, COLOR) "
+		"VALUES (?, ?, ?, ?, ?, ?);";
+	int res = sqlite3_prepare_v2(this->_db, sqlStatement.c_str(), -1, &stmt, nullptr);
+	if (res != SQLITE_OK)
+	{
+		sqlite3_finalize(stmt);
+		throw (std::string(sqlite3_errmsg(this->_db)));
+	}
+	for (const auto& line : lines)
+	{
+		double startX = line.getLine().first.coordinates.first;
+		double startY = line.getLine().first.coordinates.second;
+
+		double endX = line.getLine().second.coordinates.first;
+		double endY = line.getLine().second.coordinates.second;
+
+		std::string color = line.getColor();
+
+		sqlite3_bind_int64(stmt, 1, paintId);
+		sqlite3_bind_double(stmt, 2, startX);
+		sqlite3_bind_double(stmt, 3, startY);
+		sqlite3_bind_double(stmt, 4, endX);
+		sqlite3_bind_double(stmt, 5, endY);
+		sqlite3_bind_text(stmt, 6, color.c_str(), -1, SQLITE_STATIC);
+
+		res = sqlite3_step(stmt);
+
+		if (res != SQLITE_DONE)
+		{
+			sqlite3_finalize(stmt);
+			throw (std::string(sqlite3_errmsg(this->_db)));
+		}
+		sqlite3_reset(stmt);
+		sqlite3_clear_bindings(stmt);
+	}
+	sqlite3_finalize(stmt);
 }

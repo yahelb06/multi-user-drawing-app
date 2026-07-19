@@ -37,12 +37,6 @@ namespace DrawingApp
             if(await SendJoinRoomRequest(roomId))
             {
                 WaitingStatus.Visibility = Visibility.Visible;
-                if(await WaitForMsgFromServer())
-                {
-                    RoomWindow roomWin = new RoomWindow(roomId);
-                    roomWin.Show();
-                    this.Close();
-                }
             }
         }
 
@@ -50,48 +44,26 @@ namespace DrawingApp
         {
             try
             {
-                var loginData = new { user = LoginWindow.username, roomId = roomId };
+                var loginData = new { username = LoginWindow.username, roomId = roomId };
                 string jsonString = JsonSerializer.Serialize(loginData);
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
-                byte[] packet = new byte[1 + 4 + jsonBytes.Length];
-                packet[0] = (byte)MessageCode.LOGIN_REQUEST;
+                byte[] packet = new byte[1 + 6 + jsonBytes.Length];
+                packet[0] = (byte)MessageCode.JOIN_ROOM;
 
-                string lengthStr = jsonBytes.Length.ToString("D4");
+                string lengthStr = jsonBytes.Length.ToString("D6");
                 byte[] messageSize = Encoding.UTF8.GetBytes(lengthStr);
-                Array.Copy(messageSize, 0, packet, 1, 4);
-                Array.Copy(jsonBytes, 0, packet, 5, jsonBytes.Length);
+                Array.Copy(messageSize, 0, packet, 1, 6);
+                Array.Copy(jsonBytes, 0, packet, 7, jsonBytes.Length);
 
-                await LoginWindow.stream.WriteAsync(packet, 0, packet.Length);
-
-                byte[] buffer = new byte[1024];
-                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-
-                if (buffer[0] == (byte)MessageCode.ERROR_CODE)
-                {
-                    LoginWindow.ShowErrorMsg(buffer);
-                    return false;
-                }
+                byte[] response = await networkManager.SendAndReceiveAsync(packet);
                 return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Login failed: " + ex.Message);
+                MessageBox.Show("join failed: " + ex.Message);
                 return false;
             }
-        }
-
-        static private async System.Threading.Tasks.Task<bool> WaitForMsgFromServer()
-        {
-            byte[] buffer = new byte[1024];
-            int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-
-            if (buffer[0] == (byte)LoginWindow.MessageCode.ERROR_CODE)
-            {
-                LoginWindow.ShowErrorMsg(buffer);
-                return false;
-            }
-            return true;
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)

@@ -45,8 +45,6 @@ struct RoomLogOutResponse
 struct AddUserResponse
 {
 	unsigned int status;
-	std::string userToAccept;
-	std::string roomId;
 };
 
 struct AcceptUserResponse
@@ -68,17 +66,16 @@ struct RemovePaintFromRoomResponse
 
 struct UploadPaintToRoomResponse
 {
-	std::vector<Line> paintLines;
+	unsigned int status;
 };
 
 struct GetUsersInRoomResponse
 {
-	std::vector <std::string> usersInRoom;
+	std::vector<std::string> usersInRoom;
 };
 
 struct GetUserPaintsNameResponse
 {
-	unsigned int status;
 	std::vector<std::string> paintsName;
 };
 
@@ -90,4 +87,14 @@ struct AddLinesToPaintResponse
 struct GetPaintFromRoomResponse
 {
 	std::vector<Line> vecLines;
+};
+
+struct GetNewLinesResponse
+{
+	std::vector<Line> newLines;
+};
+
+struct SavePaintResponse
+{
+	unsigned int status;
 };

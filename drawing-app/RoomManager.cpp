@@ -167,6 +167,34 @@ AddLinesToPaintStatus RoomManager::AddLinesToPaint(const std::string& roomId, co
     return AddLinesToPaintStatus::ROOM_NOT_FOUND;
 }
 
+SavePaintStatus RoomManager::SavePaint(const std::string& roomId, const std::string manager, const std::string& paintName)
+{
+    std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);
+    const auto& it = FindRoom(roomId);
+
+    //found the room
+    if (it != this->m_RoomOpen.end())
+    {
+        if (manager == it->GetRoomManager().getUserName())
+        {
+            Paint currPaint = it->GetPaint();
+            try
+            {
+                if (this->m_database->savePaint(manager, paintName, currPaint.getPaintLines()))
+                {
+                    return SavePaintStatus::SUCCESS;
+                }
+            }
+            catch (...)
+            {
+                return SavePaintStatus::FAILED;
+            }
+            return SavePaintStatus::FAILED;
+        }
+    }
+    return SavePaintStatus::ROOM_NOT_FOUND;
+}
+
 std::vector<Line> RoomManager::GetPaintFromRoom(const std::string& roomId)
 {
     std::lock_guard<std::mutex> lock(this->m_roomManager_mutex);

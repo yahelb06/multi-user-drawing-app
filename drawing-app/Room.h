@@ -12,9 +12,8 @@ private:
 	std::vector<LoggedUser> _userWantToJoin;
 	Paint _paint;
 
-	mutable std::unique_ptr<std::mutex> m_waitingRoom_mutex;
-
-	mutable std::unique_ptr<std::mutex> m_UserInRoom_mutex;
+	mutable std::mutex m_waitingRoom_mutex;
+	mutable std::mutex m_UserInRoom_mutex;
 
 	bool doesRoomEmpty() const;
 	static std::string MakeRandomRoomId();
@@ -46,4 +45,6 @@ public:
 
 	bool AddLinesToPaint(const std::vector<Line>& linesToAdd);
 
+	Room(Room&& other) noexcept;
+	Room& operator=(Room&& other) noexcept;
 };

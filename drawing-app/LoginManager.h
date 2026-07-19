@@ -40,6 +40,7 @@ public:
 	RemoveStatus Remove(const std::string& name, SOCKET clientSocket);
 
 	SOCKET getSocketByUsername(const std::string& name) const;
+	std::string getUserBySocket(SOCKET clientSocket) const;
 
 private:
 	bool isUserLoggedIn(const std::string& name);

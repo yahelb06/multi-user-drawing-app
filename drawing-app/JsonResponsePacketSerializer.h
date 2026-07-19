@@ -2,6 +2,7 @@
 #include "Pch.h"
 #include "Json.hpp"
 #include "Responses.h"
+#include "Paint.h"
 
 class JsonResponsePacketSerializer
 {
@@ -28,8 +29,11 @@ public:
 	static Buffer serializeResponse(GetUserPaintsNameResponse& res);
 	static Buffer serializeResponse(AddLinesToPaintResponse& res);
 	static Buffer serializeResponse(GetPaintFromRoomResponse& res);
+	static Buffer serializeResponse(GetNewLinesResponse& res);
+	static Buffer serializeResponse(SavePaintResponse& res);
 
 	static Buffer serializeResponse(const std::string& userToAdd);
+	static Buffer serializeResponse(const Paint& paint);
 
 private:
 	static nlohmann::json getLinesVec(const std::vector<Line>& vecLines);

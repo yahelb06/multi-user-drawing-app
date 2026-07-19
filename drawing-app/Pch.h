@@ -19,7 +19,9 @@ enum class MessageCode : unsigned char
 	ACCEPT_USER = 220,
 	GET_USER_PAINTS = 230,
 	ADD_LINE_TO_PAINT = 240,
-	GET_PAINT_FROM_ROOM = 250
+	GET_PAINT_FROM_ROOM = 250,
+	SAVE_PAINT = 251,
+	GET_PAINT_BY_NAME = 255
 };
 
 #define PORT 8826

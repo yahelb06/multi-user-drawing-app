@@ -2,10 +2,13 @@
 
 void JsonResponsePacketSerializer::getSizeIntoBuffer(int size, Buffer& buffer)
 {
-    buffer.push_back((size >> 24) & 0xFF);
-    buffer.push_back((size >> 16) & 0xFF);
-    buffer.push_back((size >> 8) & 0xFF);
-    buffer.push_back(size & 0xFF);
+    std::string lengthStr = std::to_string(size);
+
+    while (lengthStr.length() < 6)
+    {
+        lengthStr = "0" + lengthStr;
+    }
+    buffer.insert(buffer.end(), lengthStr.begin(), lengthStr.end());
 }
 
 Buffer JsonResponsePacketSerializer::serializeResponse(ErrResponse& res)
@@ -110,8 +113,6 @@ Buffer JsonResponsePacketSerializer::serializeResponse(AddUserResponse& res)
     buffer.push_back(static_cast<unsigned char>(MessageCode::ADD_USER_TO_ROOM));
     nlohmann::json data;
     data["Status"] = res.status;
-    data["UserToAccept"] = res.userToAccept;
-    data["roomId"] = res.roomId;
     std::string jsonStr = data.dump();
     getSizeIntoBuffer(jsonStr.length(), buffer);
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
@@ -161,7 +162,7 @@ Buffer JsonResponsePacketSerializer::serializeResponse(UploadPaintToRoomResponse
     Buffer buffer;
     buffer.push_back(static_cast<unsigned char>(MessageCode::UPLOAD_PAINT_TO_ROOM));
     nlohmann::json data;
-    data["PaintLines"] = getLinesVec(res.paintLines);
+    data["status"] = res.status;
     std::string jsonStr = data.dump();
     getSizeIntoBuffer(jsonStr.length(), buffer);
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
@@ -183,9 +184,8 @@ Buffer JsonResponsePacketSerializer::serializeResponse(GetUsersInRoomResponse& r
 Buffer JsonResponsePacketSerializer::serializeResponse(GetUserPaintsNameResponse& res)
 {
     Buffer buffer;
-    buffer.push_back(static_cast<unsigned char>(MessageCode::GET_USERS_IN_ROOM));
+    buffer.push_back(static_cast<unsigned char>(MessageCode::GET_USER_PAINTS));
     nlohmann::json data;
-    data["status"] = res.status;
     data["paintsName"] = res.paintsName;
     std::string jsonStr = data.dump();
     getSizeIntoBuffer(jsonStr.length(), buffer);
@@ -217,6 +217,30 @@ Buffer JsonResponsePacketSerializer::serializeResponse(GetPaintFromRoomResponse&
     return buffer;
 }
 
+Buffer JsonResponsePacketSerializer::serializeResponse(GetNewLinesResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::ADD_LINE_TO_PAINT));
+    nlohmann::json data;
+    data["PaintLines"] = getLinesVec(res.newLines);
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
+Buffer JsonResponsePacketSerializer::serializeResponse(SavePaintResponse& res)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::SAVE_PAINT));
+    nlohmann::json data;
+    data["status"] = res.status;
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
 Buffer JsonResponsePacketSerializer::serializeResponse(const std::string& userToAdd)
 {
     Buffer buffer;
@@ -229,17 +253,30 @@ Buffer JsonResponsePacketSerializer::serializeResponse(const std::string& userTo
     return buffer;
 }
 
+Buffer JsonResponsePacketSerializer::serializeResponse(const Paint& paint)
+{
+    Buffer buffer;
+    buffer.push_back(static_cast<unsigned char>(MessageCode::GET_PAINT_BY_NAME));
+    nlohmann::json data;
+    data["PaintLines"] = getLinesVec(paint.getPaintLines());
+    data["paintName"] = paint.getPaintName();
+    std::string jsonStr = data.dump();
+    getSizeIntoBuffer(jsonStr.length(), buffer);
+    buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
+    return buffer;
+}
+
 nlohmann::json JsonResponsePacketSerializer::getLinesVec(const std::vector<Line>& vecLines)
 {
     nlohmann::json linesArray = nlohmann::json::array();
     for (const auto& line : vecLines)
     {
         nlohmann::json jsonLine;
-        jsonLine["first"]["x"] = line.getLine().first.coordinates.first;
-        jsonLine["first"]["y"] = line.getLine().first.coordinates.second;
+        jsonLine["start"]["x"] = line.getLine().first.coordinates.first;
+        jsonLine["start"]["y"] = line.getLine().first.coordinates.second;
 
-        jsonLine["second"]["x"] = line.getLine().second.coordinates.first;
-        jsonLine["second"]["y"] = line.getLine().second.coordinates.second;
+        jsonLine["end"]["x"] = line.getLine().second.coordinates.first;
+        jsonLine["end"]["y"] = line.getLine().second.coordinates.second;
         jsonLine["color"] = line.getColor();
 
         linesArray.push_back(jsonLine);

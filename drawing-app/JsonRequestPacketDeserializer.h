@@ -21,7 +21,10 @@ public:
 	static GetUserPaintsNameRequest deserializeGetUserPaintsRequest(const Buffer& buffer);
 	static AddLineToPaintRequest deserialAddLineToPaintRequest(const Buffer& buffer);
 	static GetPaintFromRoomRequest deserialGetPaintFromRoomRequest(const Buffer& buffer);
+	static GetPaintByNameRequest deserialGetPaintByNameRequest(const Buffer& buffer);
+	static SavePaintRequest deserialSavePaintRequest(const Buffer& buffer);
 
 private:
 	static std::vector<Line> getLines(const nlohmann::json& arr);
+	static Paint getPaint(const nlohmann::json& paintJson);
 };

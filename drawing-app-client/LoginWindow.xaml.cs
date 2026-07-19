@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -20,12 +21,17 @@ namespace DrawingApp
     /// </summary>
     public partial class LoginWindow : Window
     {
+        private Thread _listenThread;
         public static NetworkStream stream;
         public static string username = "";
+        ServerMessages _serverListener;
         public LoginWindow()
         {
             InitializeComponent();
             ConnectToServer();
+
+            _serverListener = new ServerMessages();
+            Task.Run(async () => await _serverListener.ListenForServerMessages());
         }
 
         private void ConnectToServer()
@@ -54,10 +60,14 @@ namespace DrawingApp
             ADD_USER_TO_ROOM = 170,
             REMOVE_USER_FROM_ROOM = 180,
             REMOVE_PAINT_FROM_ROOM = 190,
-            ADD_PAINT_TO_ROOM = 200,
+            UPLOAD_PAINT_TO_ROOM = 200,
             GET_USERS_IN_ROOM = 210,
             ACCEPT_USER = 220,
-            GET_USER_PAINTS = 230
+            GET_USER_PAINTS = 230,
+            ADD_LINE_TO_PAINT = 240,
+            GET_PAINT_FROM_ROOM = 250,
+            SAVE_PAINT = 251,
+            GET_PAINT_BY_NAME = 255
         }
 
         private async void Login_Click(object sender, RoutedEventArgs e)
@@ -88,26 +98,29 @@ namespace DrawingApp
                 string jsonString = JsonSerializer.Serialize(loginData);
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
-                byte[] packet = new byte[1 + 4 + jsonBytes.Length];
+                byte[] packet = new byte[1 + 6 + jsonBytes.Length];
                 packet[0] = (byte)MessageCode.LOGIN_REQUEST;
 
-                string lengthStr = jsonBytes.Length.ToString("D4");
+                string lengthStr = jsonBytes.Length.ToString("D6");
                 byte[] messageSize = Encoding.UTF8.GetBytes(lengthStr);
-                Array.Copy(messageSize, 0, packet, 1, 4);
-                Array.Copy(jsonBytes, 0, packet, 5, jsonBytes.Length);
+                Array.Copy(messageSize, 0, packet, 1, 6);
+                Array.Copy(jsonBytes, 0, packet, 7, jsonBytes.Length);
 
-                await stream.WriteAsync(packet, 0, packet.Length);
+                byte[] response = await networkManager.SendAndReceiveAsync(packet);
 
-                byte[] buffer = new byte[1024];
-                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-
-                if (buffer[0] == (byte)MessageCode.ERROR_CODE)
+                using (JsonDocument doc = JsonDocument.Parse(response))
                 {
-                    ShowErrorMsg(buffer);
-                    return false;
+                    int status = doc.RootElement.GetProperty("Status").GetInt32();
+                    if (status == 1)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Login failed: Wrong username or password");
+                        return false;
+                    }
                 }
-
-                return true;
             }
             catch (Exception ex)
             {
@@ -123,11 +136,7 @@ namespace DrawingApp
 
         public static void ShowErrorMsg(byte[] buffer)
         {
-            string errlengthStr = Encoding.UTF8.GetString(buffer, 1, 4);
-            int errorLength = int.Parse(errlengthStr);
-
-            string errorJson = Encoding.UTF8.GetString(buffer, 5, errorLength);
-            using (JsonDocument doc = JsonDocument.Parse(errorJson))
+            using (JsonDocument doc = JsonDocument.Parse(buffer))
             {
                 string errorMessage = doc.RootElement.GetProperty("message").GetString();
                 MessageBox.Show(errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);

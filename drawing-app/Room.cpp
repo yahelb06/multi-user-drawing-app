@@ -48,7 +48,7 @@ Paint Room::GetPaint() const
 
 std::vector<std::string> Room::getUserInRoom() const
 {
-    std::lock_guard<std::mutex> lock(*this->m_UserInRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     std::vector<std::string> usernamesVec;
     for (const auto& username : this->_userInTheRoom)
     {
@@ -66,7 +66,7 @@ void Room::setPaint(const Paint& paint)
 
 void Room::setUserToWaitingRoom(const LoggedUser& user)
 {
-    std::lock_guard<std::mutex> lock(*this->m_waitingRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_waitingRoom_mutex);
     this->_userWantToJoin.push_back(user);
 }
 
@@ -104,13 +104,13 @@ bool Room::doesCurrentPaint(const std::string& paintName)
 
 void Room::stopJoinRequest(const LoggedUser& user)
 {
-    std::lock_guard<std::mutex> lock(*this->m_waitingRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_waitingRoom_mutex);
     removeUserFromWaitingRoom(user);
 }
 
 bool Room::removePaint(const LoggedUser& manager, const std::string& paintName)
 {
-    std::lock_guard<std::mutex> lock(*this->m_UserInRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     if (!this->isUserManager(manager))
     {
         return false;
@@ -126,7 +126,7 @@ bool Room::removePaint(const LoggedUser& manager, const std::string& paintName)
 
 bool Room::addPaint(const LoggedUser& manager, const std::string& paintName, const std::vector<Line>& LinesInPaint)
 {
-    std::lock_guard<std::mutex> lock(*this->m_UserInRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     if (!this->isUserManager(manager))
     {
         return false;
@@ -138,15 +138,15 @@ bool Room::addPaint(const LoggedUser& manager, const std::string& paintName, con
 
 void Room::CloseRoom()
 {
-    std::lock_guard<std::mutex> lock(*this->m_UserInRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     this->_userInTheRoom.clear();
 }
 
 bool Room::addUserToRoom(const LoggedUser& manager, const LoggedUser& userToAdd, const bool& accept)
 {
 
-    std::lock_guard<std::mutex> waitingRoomLock(*this->m_waitingRoom_mutex);
-    std::lock_guard<std::mutex> lock(*this->m_UserInRoom_mutex);
+    std::lock_guard<std::mutex> waitingRoomLock(this->m_waitingRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     if (isUserManager(manager))
     {
         if (accept)
@@ -161,7 +161,7 @@ bool Room::addUserToRoom(const LoggedUser& manager, const LoggedUser& userToAdd,
 
 bool Room::exitRoom(const LoggedUser& user)
 {
-    std::lock_guard<std::mutex> lock(*this->m_UserInRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     this->_userInTheRoom.erase(std::remove(_userInTheRoom.begin(), _userInTheRoom.end(), user), _userInTheRoom.end());
     if (this->_userInTheRoom.empty())
     {
@@ -173,11 +173,31 @@ bool Room::exitRoom(const LoggedUser& user)
 
 bool Room::removeUser(const LoggedUser& manager, const LoggedUser& userToRemove)
 {
-    std::lock_guard<std::mutex> lock(*this->m_UserInRoom_mutex);
+    std::lock_guard<std::mutex> lock(this->m_UserInRoom_mutex);
     if (isUserManager(manager))
     {
         this->_userInTheRoom.erase(std::remove(_userInTheRoom.begin(), _userInTheRoom.end(), userToRemove), _userInTheRoom.end());
         return true;
     }
     return false;
+}
+
+Room::Room(Room&& other) noexcept
+{
+    this->_id = std::move(other._id);
+    this->_userInTheRoom = std::move(other._userInTheRoom);
+    this->_userWantToJoin = std::move(other._userWantToJoin);
+    this->_paint = std::move(other._paint);
+}
+
+Room& Room::operator=(Room&& other) noexcept
+{
+    if (this != &other)
+    {
+        this->_id = std::move(other._id);
+        this->_userInTheRoom = std::move(other._userInTheRoom);
+        this->_userWantToJoin = std::move(other._userWantToJoin);
+        this->_paint = std::move(other._paint);
+    }
+    return *this;
 }

@@ -25,7 +25,11 @@ private:
 	RequestResult RemoveUserFromRoom(const RequestInfo& info);
 	RequestResult RemovePaintFromRoom(const RequestInfo& info);
 	RequestResult AddLineToPaint(const RequestInfo& info);
+	RequestResult GetUserPaintsName(const RequestInfo& info);
+	RequestResult GetPaintByName(const RequestInfo& info);
+	RequestResult UploadPaintToRoom(const RequestInfo& info);
 	RequestResult GetPaintFromRoom(const RequestInfo& info);
+	RequestResult SavePaint(const RequestInfo& info);
 
 	RequestHandlerFactory& m_handlerFactory;
 

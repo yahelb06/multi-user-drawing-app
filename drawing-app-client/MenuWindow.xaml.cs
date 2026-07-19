@@ -22,7 +22,7 @@ namespace DrawingApp
     /// </summary>
     public partial class MenuWindow : Window
     {
-        private string roomId = string.Empty;
+        private string _roomId;
         public MenuWindow()
         {
             InitializeComponent();
@@ -34,7 +34,7 @@ namespace DrawingApp
         {
             if(await SendCreateRoomRequest(LoginWindow.username))
             {
-                RoomWindow roomWin = new RoomWindow();
+               CreateRoom roomWin = new CreateRoom(_roomId);
                 roomWin.Show();
                 this.Close();
             }
@@ -48,31 +48,23 @@ namespace DrawingApp
                 string jsonString = JsonSerializer.Serialize(loginData);
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
-                byte[] packet = new byte[1 + 4 + jsonBytes.Length];
+                byte[] packet = new byte[1 + 6 + jsonBytes.Length];
                 packet[0] = (byte)LoginWindow.MessageCode.CREATE_ROOM;
 
-                string lengthStr = jsonBytes.Length.ToString("D4");
+                string lengthStr = jsonBytes.Length.ToString("D6");
                 byte[] messageSize = Encoding.UTF8.GetBytes(lengthStr);
-                Array.Copy(messageSize, 0, packet, 1, 4);
-                Array.Copy(jsonBytes, 0, packet, 5, jsonBytes.Length);
+                Array.Copy(messageSize, 0, packet, 1, 6);
+                Array.Copy(jsonBytes, 0, packet, 7, jsonBytes.Length);
 
-                await LoginWindow.stream.WriteAsync(packet, 0, packet.Length);
+                byte[] response = await networkManager.SendAndReceiveAsync(packet);
 
-                byte[] buffer = new byte[1024];
-                int bytesRead = await LoginWindow.stream.ReadAsync(buffer, 0, buffer.Length);
-
-                if (buffer[0] == (byte)LoginWindow.MessageCode.ERROR_CODE)
+                if (response.Length >= 5)
                 {
-                    LoginWindow.ShowErrorMsg(buffer);
-                    return false;
-                }
-                if (bytesRead >= 5)
-                {
-                    string jsonStr = Encoding.UTF8.GetString(buffer, 5, bytesRead - 5);
+                    string jsonStr = Encoding.UTF8.GetString(response).TrimEnd('\0');
 
                     using (JsonDocument doc = JsonDocument.Parse(jsonStr))
                     {
-                        roomId = doc.RootElement.GetProperty("RoomId").GetString();
+                        _roomId = doc.RootElement.GetProperty("RoomId").GetString();
                     }
                 }
                 return true;

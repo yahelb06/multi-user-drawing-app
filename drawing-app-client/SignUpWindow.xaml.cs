@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using DrawingApp;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
@@ -22,8 +23,10 @@ namespace drawing_app_client
             string email = EmailTextBox.Text;
             string password = PasswordBox.Password;
 
-            // TODO: כאן תוסיף את בדיקות התקינות ואת שליחת בקשת ה-SIGNUP_REQUEST לשרת ה-C++
-            MessageBox.Show($"יוצר משתמש: {username}");
+            if(await SendSignUpRequest(username, password, email))
+            {
+                MessageBox.Show($"יוצר משתמש: {username}");
+            }
         }
 
         private async System.Threading.Tasks.Task<bool> SendSignUpRequest(string user, string pass, string email)
@@ -34,26 +37,36 @@ namespace drawing_app_client
                 string jsonString = JsonSerializer.Serialize(SignUpData);
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
-                byte[] packet = new byte[1 + 4 + jsonBytes.Length];
+                byte[] packet = new byte[1 + 6 + jsonBytes.Length];
                 packet[0] = (byte)MessageCode.SIGNUP_REQUEST;
 
-                string lengthStr = jsonBytes.Length.ToString("D4");
+                string lengthStr = jsonBytes.Length.ToString("D6");
                 byte[] messageSize = Encoding.UTF8.GetBytes(lengthStr);
-                Array.Copy(messageSize, 0, packet, 1, 4);
-                Array.Copy(jsonBytes, 0, packet, 5, jsonBytes.Length);
+                Array.Copy(messageSize, 0, packet, 1, 6);
+                Array.Copy(jsonBytes, 0, packet, 7, jsonBytes.Length);
 
-                await stream.WriteAsync(packet, 0, packet.Length);
+                byte[] response = await networkManager.SendAndReceiveAsync(packet);
 
-                byte[] buffer = new byte[1024];
-                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                string jsonStr = Encoding.UTF8.GetString(response).TrimEnd('\0');
 
-                if (buffer[0] == (byte)MessageCode.ERROR_CODE)
+                using (JsonDocument doc = JsonDocument.Parse(jsonStr))
                 {
-                    ShowErrorMsg(buffer);
-                    return false;
+                    if (doc.RootElement.TryGetProperty("Status", out JsonElement status))
+                    {
+                        if (status.GetInt32() == 1)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
-
-                return true;
             }
             catch (Exception ex)
             {

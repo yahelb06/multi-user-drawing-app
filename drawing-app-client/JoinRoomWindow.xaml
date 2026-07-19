@@ -53,7 +53,7 @@
                     <Border Background="White" CornerRadius="15" BorderThickness="1" BorderBrush="#D2B48C" Height="50">
                         <TextBox x:Name="RoomCodeTextBox" Background="Transparent" BorderThickness="0" 
                                  VerticalContentAlignment="Center" FontSize="18" Padding="15,0" 
-                                 Foreground="#966859" MaxLength="4"/>
+                                 Foreground="#966859" MaxLength="6"/>
                     </Border>
 
                     <Button Content="הצטרף עכשיו" Margin="0,25,0,0" Height="45" Width="180" Cursor="Hand"

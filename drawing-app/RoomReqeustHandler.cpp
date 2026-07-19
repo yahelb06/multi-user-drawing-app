@@ -19,7 +19,11 @@ bool RoomRequestHandler::isRequestRelevant(RequestInfo& info)
 		code == MessageCode::ACCEPT_USER ||
 		code == MessageCode::REMOVE_USER ||
 		code == MessageCode::ADD_LINE_TO_PAINT ||
-		code == MessageCode::GET_PAINT_FROM_ROOM);
+		code == MessageCode::GET_USER_PAINTS ||
+		code == MessageCode::GET_PAINT_BY_NAME ||
+		code == MessageCode::UPLOAD_PAINT_TO_ROOM ||
+		code == MessageCode::GET_PAINT_FROM_ROOM ||
+		code == MessageCode::SAVE_PAINT);
 }
 
 RequestResult RoomRequestHandler::handlerRequest(RequestInfo& info)
@@ -31,6 +35,7 @@ RequestResult RoomRequestHandler::handlerRequest(RequestInfo& info)
 		ErrResponse err;
 		err.message = "Request failed, Illegal message code.";
 		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		return res;
 	}
 	else if (code == MessageCode::ADD_USER_TO_ROOM)
 	{
@@ -52,9 +57,25 @@ RequestResult RoomRequestHandler::handlerRequest(RequestInfo& info)
 	{
 		return AddLineToPaint(info);
 	}
+	else if (code == MessageCode::GET_USER_PAINTS)
+	{
+		return GetUserPaintsName(info);
+	}
+	else if (code == MessageCode::GET_PAINT_BY_NAME)
+	{
+		return GetPaintByName(info);
+	}
+	else if (code == MessageCode::UPLOAD_PAINT_TO_ROOM)
+	{
+		return UploadPaintToRoom(info);
+	}
 	else if (code == MessageCode::GET_PAINT_FROM_ROOM)
 	{
 		return GetPaintFromRoom(info);
+	}
+	else if (code == MessageCode::SAVE_PAINT)
+	{
+		return SavePaint(info);
 	}
 }
 
@@ -73,7 +94,7 @@ RequestResult RoomRequestHandler::AddUser(const RequestInfo& info)
 	if (status == AddUserStatus::ADD_SUCCESS)
 	{
 		AddUserResponse addUser;
-		addUser.status = static_cast<unsigned int>(AddUserStatus::ADD_SUCCESS);
+		addUser.status = static_cast<unsigned int>(status);
 		res.response = JsonResponsePacketSerializer::serializeResponse(addUser);
 		res.newHandler = this;
 
@@ -85,6 +106,10 @@ RequestResult RoomRequestHandler::AddUser(const RequestInfo& info)
 		if (!sendMsgToSingleUser(userAddRes, req.roomId, userToAdd, this->m_handlerFactory.CreateRoomRequest()))
 		{
 			showErr = true;
+		}
+		else
+		{
+			this->m_handlerFactory.getServer()->updateClientHandler(userToAddSocket, this->m_handlerFactory.CreateRoomRequest());
 		}
 	}
 	else if (status == AddUserStatus::USER_ISNT_THE_MANAGER || showErr)
@@ -220,8 +245,8 @@ RequestResult RoomRequestHandler::AddLineToPaint(const RequestInfo& info)
 		res.response = JsonResponsePacketSerializer::serializeResponse(addLines);
 		res.newHandler = this;
 
-		GetPaintFromRoomResponse newLines;
-		newLines.vecLines = req.linesToAdd;
+		GetNewLinesResponse newLines;
+		newLines.newLines = req.linesToAdd;
 		Buffer otherPlayerRes = JsonResponsePacketSerializer::serializeResponse(newLines);
 		if (!SendMsgToAllUsersInRoom(otherPlayerRes, req.roomId, this))
 		{
@@ -243,6 +268,51 @@ RequestResult RoomRequestHandler::AddLineToPaint(const RequestInfo& info)
 		res.newHandler = this;
 	}
 	return res;
+}
+
+RequestResult RoomRequestHandler::GetUserPaintsName(const RequestInfo& info)
+{
+	RequestResult res;
+	try
+	{
+		GetUserPaintsNameRequest req = JsonRequestPacketDeserializer::deserializeGetUserPaintsRequest(info.buffer);
+
+		GetUserPaintsNameResponse paintsName;
+		paintsName.paintsName = this->m_handlerFactory.getRoomManager().getUserPaintsName(req.username);
+		res.response = JsonResponsePacketSerializer::serializeResponse(paintsName);
+		res.newHandler = this->m_handlerFactory.CreateRoomRequest();
+		return res;
+	}
+	catch (...)
+	{
+		ErrResponse err;
+		err.message = "Some error happend. Try again.";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		res.newHandler = this;
+		return res;
+	}
+}
+
+RequestResult RoomRequestHandler::GetPaintByName(const RequestInfo& info)
+{
+	RequestResult res;
+	try
+	{
+		GetPaintByNameRequest req = JsonRequestPacketDeserializer::deserialGetPaintByNameRequest(info.buffer);
+		Paint paint = this->m_handlerFactory.getRoomManager().GetPaint(req.user, req.paintName);
+
+		res.response = JsonResponsePacketSerializer::serializeResponse(paint);
+		res.newHandler = this;
+		return res;
+	}
+	catch (...)
+	{
+		ErrResponse err;
+		err.message = "Some error happend. Try again.";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		res.newHandler = this;
+		return res;
+	}
 }
 
 RequestResult RoomRequestHandler::GetPaintFromRoom(const RequestInfo& info)
@@ -270,6 +340,50 @@ RequestResult RoomRequestHandler::GetPaintFromRoom(const RequestInfo& info)
 	}
 }
 
+RequestResult RoomRequestHandler::SavePaint(const RequestInfo& info)
+{
+	RequestResult res;
+	try
+	{
+		SavePaintRequest req = JsonRequestPacketDeserializer::deserialSavePaintRequest(info.buffer);
+
+		SavePaintStatus status = this->m_handlerFactory.getRoomManager().SavePaint(req.roomId, req.manager, req.paintName);
+		if (status == SavePaintStatus::SUCCESS)
+		{
+			SavePaintResponse savePaint;
+			savePaint.status = static_cast<unsigned int>(status);
+
+			res.response = JsonResponsePacketSerializer::serializeResponse(savePaint);
+			res.newHandler = this;
+			return res;
+		}
+		else if (status == SavePaintStatus::ROOM_NOT_FOUND)
+		{
+			ErrResponse err;
+			err.message = "Room not found, Try again";
+			res.response = JsonResponsePacketSerializer::serializeResponse(err);
+			res.newHandler = this;
+			return res;
+		}
+		else
+		{
+			ErrResponse err;
+			err.message = "Error happend, Try again";
+			res.response = JsonResponsePacketSerializer::serializeResponse(err);
+			res.newHandler = this;
+			return res;
+		}
+	}
+	catch (...)
+	{
+		ErrResponse err;
+		err.message = "Error happend, Try again";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		res.newHandler = this;
+		return res;
+	}
+}
+
 bool RoomRequestHandler::sendMsgToSingleUser(const Buffer& res, const std::string& roomId, const LoggedUser& user, IRequestHandler* handler)
 {
 	try
@@ -280,7 +394,12 @@ bool RoomRequestHandler::sendMsgToSingleUser(const Buffer& res, const std::strin
 			return false;
 		}
 		this->m_handlerFactory.getServer()->updateClientHandler(playerSocket, handler);
-		send(playerSocket, reinterpret_cast<const char*>(res.data()), res.size(), 0);
+		if (!Server::sendAll(playerSocket, reinterpret_cast<const char*>(res.data()), res.size()))
+		{
+			std::cout << "Failed to send message to user: " << user.getUserName() << ", closing socket." << std::endl;
+			closesocket(playerSocket);
+			return false;
+		}
 		return true;
 	}
 	catch (...)
@@ -302,7 +421,12 @@ bool RoomRequestHandler::SendMsgToAllUsersInRoom(const Buffer& res, const std::s
 				return false;
 			}
 			this->m_handlerFactory.getServer()->updateClientHandler(playerSocket, handler);
-			send(playerSocket, reinterpret_cast<const char*>(res.data()), res.size(), 0);
+			if (!Server::sendAll(playerSocket, reinterpret_cast<const char*>(res.data()), res.size()))
+			{
+				std::cout << "Failed to send message to player: " << player << ", closing socket." << std::endl;
+				closesocket(playerSocket);
+				continue;
+			}
 		}
 		return true;
 	}
@@ -310,4 +434,36 @@ bool RoomRequestHandler::SendMsgToAllUsersInRoom(const Buffer& res, const std::s
 	{
 		return false;
 	}
+}
+
+RequestResult RoomRequestHandler::UploadPaintToRoom(const RequestInfo& info)
+{
+	RequestResult res;
+
+	UploadPaintToRoomRequest req = JsonRequestPacketDeserializer::deserializeUploadPaintToRoomRequest(info.buffer);
+
+	LoggedUser manager(req.manager, info.socket);
+	PaintRoomStatus status = static_cast<PaintRoomStatus>(this->m_handlerFactory.getRoomManager().UploadPaint(manager, req.roomId, req.paint));
+	if (status == PaintRoomStatus::SUCCESS)
+	{
+		UploadPaintToRoomResponse addPaint;
+		addPaint.status = static_cast<unsigned int>(status);
+		res.response = JsonResponsePacketSerializer::serializeResponse(addPaint);
+		res.newHandler = this->m_handlerFactory.CreateRoomRequest();
+	}
+	else if (status == PaintRoomStatus::FAILED)
+	{
+		ErrResponse err;
+		err.message = "Add paint failed, Please try again.";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		res.newHandler = this;
+	}
+	else
+	{
+		ErrResponse err;
+		err.message = "Room not found add paint failed, Please try again.";
+		res.response = JsonResponsePacketSerializer::serializeResponse(err);
+		res.newHandler = this;
+	}
+	return res;
 }

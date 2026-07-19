@@ -15,9 +15,7 @@ bool MenuRequestHandler::isRequestRelevant(RequestInfo& info)
 
 	return (code == MessageCode::ROOM_LOG_OUT_REQUEST ||
 		code == MessageCode::CREATE_ROOM ||
-		code == MessageCode::JOIN_ROOM ||
-		code == MessageCode::GET_USER_PAINTS ||
-		code == MessageCode::UPLOAD_PAINT_TO_ROOM);
+		code == MessageCode::JOIN_ROOM);
 }
 
 RequestResult MenuRequestHandler::handlerRequest(RequestInfo& info)
@@ -43,14 +41,6 @@ RequestResult MenuRequestHandler::handlerRequest(RequestInfo& info)
 	else if (code == MessageCode::JOIN_ROOM)
 	{
 		return JoinRoom(info);
-	}
-	else if (code == MessageCode::GET_USER_PAINTS)
-	{
-		return GetUserPaintsName(info);
-	}
-	else if (code == MessageCode::UPLOAD_PAINT_TO_ROOM)
-	{
-		return UploadPaintToRoom(info);
 	}
 	RequestResult res;
 	res.newHandler = this;
@@ -121,63 +111,6 @@ RequestResult MenuRequestHandler::JoinRoom(const RequestInfo& info)
 		res.newHandler = this->m_handlerFactory.createMenuRequest();
 	}
 	return res;
-}
-
-RequestResult MenuRequestHandler::UploadPaintToRoom(const RequestInfo& info)
-{
-	RequestResult res;
-
-	UploadPaintToRoomRequest req = JsonRequestPacketDeserializer::deserializeUploadPaintToRoomRequest(info.buffer);
-
-	Paint paint = (this->m_handlerFactory.getRoomManager().GetPaint(req.data.manager, req.data.paintName));
-
-	LoggedUser manager(req.data.manager, info.socket);
-	PaintRoomStatus status = static_cast<PaintRoomStatus>(this->m_handlerFactory.getRoomManager().UploadPaint(manager, req.data.roomId, paint));
-	if (status == PaintRoomStatus::SUCCESS)
-	{
-		UploadPaintToRoomResponse addPaint;
-		addPaint.paintLines = paint.getPaintLines();
-		res.response = JsonResponsePacketSerializer::serializeResponse(addPaint);
-		res.newHandler = this->m_handlerFactory.CreateRoomRequest();
-	}
-	else if (status == PaintRoomStatus::FAILED)
-	{
-		ErrResponse err;
-		err.message = "Add paint failed, Please try again.";
-		res.response = JsonResponsePacketSerializer::serializeResponse(err);
-		res.newHandler = this;
-	}
-	else
-	{
-		ErrResponse err;
-		err.message = "Room not found add paint failed, Please try again.";
-		res.response = JsonResponsePacketSerializer::serializeResponse(err);
-		res.newHandler = this;
-	}
-	return res;
-}
-
-RequestResult MenuRequestHandler::GetUserPaintsName(const RequestInfo& info)
-{
-	RequestResult res;
-	try
-	{
-		GetUserPaintsNameRequest req = JsonRequestPacketDeserializer::deserializeGetUserPaintsRequest(info.buffer);
-
-		GetUserPaintsNameResponse paintsName;
-		paintsName.paintsName = this->m_handlerFactory.getRoomManager().getUserPaintsName(req.paintName);
-		res.response = JsonResponsePacketSerializer::serializeResponse(paintsName);
-		res.newHandler = this->m_handlerFactory.CreateRoomRequest();
-		return res;
-	}
-	catch (...)
-	{
-		ErrResponse err;
-		err.message = "Some error happend. Try again.";
-		res.response = JsonResponsePacketSerializer::serializeResponse(err);
-		res.newHandler = this;
-		return res;
-	}
 }
 
 bool MenuRequestHandler::sentJoinRoomToManager(SOCKET managerSocket, const std::string& userToAdd)

@@ -14,6 +14,7 @@ public:
 	void startHandleRequest();
 
 	void updateClientHandler(SOCKET clientSocket, IRequestHandler* newHandler);
+	static bool sendAll(SOCKET socket, const char* data, int length);
 
 private:
 	

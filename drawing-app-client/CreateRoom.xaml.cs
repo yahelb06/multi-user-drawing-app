@@ -10,9 +10,11 @@ namespace DrawingApp
 {
     public partial class CreateRoom : Window
     {
-        public CreateRoom()
+        private string _roomId;
+        public CreateRoom(string roomId)
         {
             InitializeComponent();
+            _roomId = roomId;
 
             if (LoginWindow.stream != null && !string.IsNullOrEmpty(LoginWindow.username))
             {
@@ -23,8 +25,7 @@ namespace DrawingApp
         {
             try
             {
-                int roomId = await SendCreateRoom();
-                ManagerRoomWindow roomWin = new ManagerRoomWindow(roomId.ToString());
+                ManagerRoomWindow roomWin = new ManagerRoomWindow(_roomId.ToString());
                 roomWin.Show();
                 this.Close();
             }
@@ -33,13 +34,21 @@ namespace DrawingApp
                 MessageBox.Show($"שגיאה בפתיחת החדר: {ex.Message}", "שגיאה", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void UploadAssetsClick(object sender, RoutedEventArgs e)
+        private async void UploadAssetsClick(object sender, RoutedEventArgs e)
         {
             try
             {
-                List<string> userPaints = GetUserPaintsName();
-                UploadWindow uploadWin = new UploadWindow(userPaints);
-                uploadWin.Show();
+                List<string> userPaints = await GetUserPaintsName();
+                if (userPaints != null && userPaints.Count > 0)
+                {
+                    UploadWindow uploadWin = new UploadWindow(userPaints, _roomId);
+                    uploadWin.Show();
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("לא נמצאו ציורים שמורים.");
+                }
             }
             catch (Exception ex)
             {
@@ -47,55 +56,7 @@ namespace DrawingApp
             }
         }
 
-        public static async Task<int> SendCreateRoom()
-        {
-            try
-            {
-                var createRoom = new { username = LoginWindow.username };
-                string jsonString = JsonSerializer.Serialize(createRoom);
-                byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
-
-                byte[] packet = new byte[1 + 4 + jsonBytes.Length];
-                packet[0] = (byte)MessageCode.CREATE_ROOM;
-
-                string lengthStr = jsonBytes.Length.ToString("D4");
-                byte[] messageSize = Encoding.UTF8.GetBytes(lengthStr);
-                Array.Copy(messageSize, 0, packet, 1, 4);
-                Array.Copy(jsonBytes, 0, packet, 5, jsonBytes.Length);
-
-                await LoginWindow.stream.WriteAsync(packet, 0, packet.Length);
-                await LoginWindow.stream.FlushAsync();
-
-                byte[] buffer = new byte[1024];
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-                if (buffer[0] == (byte)MessageCode.ERROR_CODE)
-                {
-                    LoginWindow.ShowErrorMsg(buffer);
-                    return -1;
-                }
-                else
-                {
-                    if (bytesRead >= 5)
-                    {
-                        string jsonStr = Encoding.UTF8.GetString(buffer, 5, bytesRead - 5);
-
-                        using (JsonDocument doc = JsonDocument.Parse(jsonStr))
-                        {
-                            return doc.RootElement.GetProperty("roomId").GetInt32();
-                        }
-                    }
-                }
-                return -1;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-                return -1;
-            }
-        }
-
-        public static List<string> GetUserPaintsName()
+        public static async Task<List<string>> GetUserPaintsName()
         {
             List<string> paintsName = new List<string>();
             try
@@ -104,39 +65,23 @@ namespace DrawingApp
                 string jsonString = JsonSerializer.Serialize(loginData);
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
-                byte[] packet = new byte[1 + 4 + jsonBytes.Length];
+                byte[] packet = new byte[1 + 6 + jsonBytes.Length];
                 packet[0] = (byte)MessageCode.GET_USER_PAINTS;
 
-                string lengthStr = jsonBytes.Length.ToString("D4");
+                string lengthStr = jsonBytes.Length.ToString("D6");
                 byte[] messageSize = Encoding.UTF8.GetBytes(lengthStr);
-                Array.Copy(messageSize, 0, packet, 1, 4);
-                Array.Copy(jsonBytes, 0, packet, 5, jsonBytes.Length);
+                Array.Copy(messageSize, 0, packet, 1, 6);
+                Array.Copy(jsonBytes, 0, packet, 7, jsonBytes.Length);
 
-                LoginWindow.stream.WriteAsync(packet, 0, packet.Length);
+                byte[] response = await networkManager.SendAndReceiveAsync(packet);
 
-                byte[] buffer = new byte[1024];
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-                if (buffer[0] == (byte)MessageCode.ERROR_CODE)
+                using (JsonDocument doc = JsonDocument.Parse(response))
                 {
-                    LoginWindow.ShowErrorMsg(buffer);
-                    paintsName.Add("-1");
-                }
-                else
-                {
-                    if (bytesRead >= 5)
+                    if (doc.RootElement.TryGetProperty("paintsName", out JsonElement paintsArray))
                     {
-                        string jsonStr = Encoding.UTF8.GetString(buffer, 5, bytesRead - 5);
-
-                        using (JsonDocument doc = JsonDocument.Parse(jsonStr))
+                        foreach (JsonElement roomElement in paintsArray.EnumerateArray())
                         {
-                            if (doc.RootElement.TryGetProperty("paintsName", out JsonElement paintsArray))
-                            {
-                                foreach (JsonElement roomElement in paintsArray.EnumerateArray())
-                                {
-                                    paintsName.Add(roomElement.GetString());
-                                }
-                            }
+                            paintsName.Add(roomElement.GetString());
                         }
                     }
                 }

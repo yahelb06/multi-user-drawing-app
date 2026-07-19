@@ -1,7 +1,7 @@
 #pragma once
 #include "Pch.h"
 #include "RequestResult.h"
-#include "Line.h"
+#include "Paint.h"
 
 struct RequestInfo
 {
@@ -80,12 +80,20 @@ struct RemovePaintFromRoomRequest
 
 struct UploadPaintToRoomRequest
 {
-	PaintRoomData data;
+	std::string manager;
+	std::string roomId;
+	Paint paint;
+};
+
+struct GetPaintByNameRequest
+{
+	std::string user;
+	std::string paintName;
 };
 
 struct GetUserPaintsNameRequest
 {
-	std::string paintName;
+	std::string username;
 };
 
 struct AddLineToPaintRequest
@@ -98,6 +106,13 @@ struct AddLineToPaintRequest
 struct GetPaintFromRoomRequest
 {
 	std::string roomId;
+};
+
+struct SavePaintRequest
+{
+	std::string roomId;
+	std::string manager;
+	std::string paintName;
 };
 
 class IRequestHandler

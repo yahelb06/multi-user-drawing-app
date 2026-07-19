@@ -38,6 +38,13 @@ enum class AddLinesToPaintStatus : unsigned int
 	ROOM_NOT_FOUND,
 };
 
+enum class SavePaintStatus : unsigned int
+{
+	SUCCESS = 1,
+	FAILED,
+	ROOM_NOT_FOUND,
+};
+
 
 class RoomManager
 {
@@ -68,6 +75,8 @@ public:
 	Paint GetPaint(const std::string& username, const std::string& paintName);
 
 	AddLinesToPaintStatus AddLinesToPaint(const std::string& roomId, const std::string& manager, const std::vector<Line>& linesToAdd);
+	SavePaintStatus SavePaint(const std::string& roomId, const std::string manager, const std::string& paintName);
+
 
 	std::vector<Line> GetPaintFromRoom(const std::string& roomId);
 };

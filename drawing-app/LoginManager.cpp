@@ -89,6 +89,18 @@ SOCKET LoginManager::getSocketByUsername(const std::string& name) const
     return INVALID_SOCKET;
 }
 
+std::string LoginManager::getUserBySocket(SOCKET clientSocket) const
+{
+    for (const auto& user : m_loggedUsers)
+    {
+        if (user.getSocket() == clientSocket)
+        {
+            return user.getUserName();
+        }
+    }
+    return "";
+}
+
 bool LoginManager::isUserLoggedIn(const std::string& name)
 {
     auto it = std::find_if(m_loggedUsers.begin(), m_loggedUsers.end(), [&name](const LoggedUser& user)

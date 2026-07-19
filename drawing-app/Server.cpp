@@ -48,7 +48,7 @@ void Server::updateClientHandler(SOCKET clientSocket, IRequestHandler* newHandle
 	std::lock_guard<std::mutex> lock(userListMutex);
 	if (m_client.find(clientSocket) != m_client.end())
 	{
-		delete m_client[clientSocket];
+		//delete m_client[clientSocket];
 		m_client[clientSocket] = newHandler;
 	}
 }
@@ -91,9 +91,6 @@ void Server::handleNewClient()
 
 void Server::clientHandler(SOCKET clientSocket)
 {
-	//one extra index
-	char buffer[BUFFER_SIZE + 1];
-	int size = 0;
 	std::string users;
 	std::string name;
 	int userMsgSize;
@@ -102,16 +99,43 @@ void Server::clientHandler(SOCKET clientSocket)
 	{
 		while (true)
 		{
-			userMsgSize = recv(clientSocket, buffer, BUFFER_SIZE, 0);
-			if (userMsgSize <= 5 || userMsgSize >= BUFFER_SIZE)
+			char header[7];
+			int bytesRead = 0;
+
+			while (bytesRead < 7)
+			{
+				int bytesReturn = recv(clientSocket, header + bytesRead, 7 - bytesRead, 0);
+				if (bytesReturn <= 0)
+				{
+					throw std::exception();
+				}
+				bytesRead += bytesReturn;
+			}
+			char messageCode = header[0];
+			std::string lengthStr(header + 1, 6);
+			int jsonLength = std::stoi(lengthStr);
+			if (jsonLength <= 0)
 			{
 				throw std::exception();
 			}
-			buffer[userMsgSize] = '\0';
-			std::cout << buffer << "\n";
-			Buffer vecBuffer;
-			vecBuffer.insert(vecBuffer.begin(), buffer + START_OF_DATA, buffer + userMsgSize);
-			RequestInfo info = { buffer[0], time_t(), vecBuffer, clientSocket };
+			std::vector<char> jsonBuffer(jsonLength + 1, '\0');
+			int totalBytesReceived = 0;
+			while (totalBytesReceived < jsonLength)
+			{
+				int bytesReturn = recv(clientSocket, jsonBuffer.data() + totalBytesReceived, jsonLength - totalBytesReceived, 0);
+				if (bytesReturn <= 0)
+				{
+					throw std::exception();
+				}
+				totalBytesReceived += bytesReturn;
+			}
+			Buffer vecBuffer(jsonBuffer.begin(), jsonBuffer.begin() + jsonLength);
+			for (auto& ch : vecBuffer)
+			{
+				std::cout << ch;
+			}
+			std::cout << "\n";
+			RequestInfo info = { messageCode, time_t(), vecBuffer, clientSocket };
 			{
 				std::lock_guard<std::mutex> lock(userListMutex);
 				if (m_client.find(clientSocket) != m_client.end())
@@ -138,9 +162,11 @@ void Server::clientHandler(SOCKET clientSocket)
 			{
 				std::cout << ch;
 			}
-			std::cout << "\n\n\n";
-			send(clientSocket, reinterpret_cast<const char*>(res.response.data()), res.response.size(), 0);
-		
+			std::cout << "\n";
+			if (!sendAll(clientSocket, reinterpret_cast<const char*>(res.response.data()), res.response.size()))
+			{
+				throw std::exception();
+			}
 		}
 	}
 	catch (const nlohmann::json::parse_error& e)
@@ -154,6 +180,35 @@ void Server::clientHandler(SOCKET clientSocket)
 	catch (const std::exception& e)
 	{
 		std::cout << "Client socket closed" << std::endl;
+		std::string usernameToLogout = this->m_handlerFactory.getLoginManager().getUserBySocket(clientSocket);
+		if (!usernameToLogout.empty())
+		{
+			this->m_handlerFactory.getLoginManager().logout(usernameToLogout, clientSocket);
+		}
 		closesocket(clientSocket);
+
+		std::lock_guard<std::mutex> lock(userListMutex);
+		auto it = m_client.find(clientSocket);
+		if (it != m_client.end())
+		{
+			delete it->second;
+			m_client.erase(it);
+		}
 	}
 }
+
+bool Server::sendAll(SOCKET socket, const char* data, int length)
+{
+	int totalBytesSent = 0;
+	while (totalBytesSent < length)
+	{
+		int bytesSent = send(socket, data + totalBytesSent, length - totalBytesSent, 0);
+		if (bytesSent == SOCKET_ERROR)
+		{
+			return false;
+		}
+		totalBytesSent += bytesSent;
+	}
+	return true;
+}
+
