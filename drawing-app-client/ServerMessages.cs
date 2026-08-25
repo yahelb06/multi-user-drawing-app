@@ -150,6 +150,7 @@ namespace DrawingApp
                             {
                                 if (status.GetInt32() == 1)
                                 {
+                                    List<LineData> paintLines = new List<LineData>();
                                     List<string> usersInRoom = new List<string>();
                                     string roomId = doc.RootElement.GetProperty("RoomId").GetString();
                                     if (doc.RootElement.TryGetProperty("UsersInRoom", out JsonElement usersArray))
@@ -159,7 +160,25 @@ namespace DrawingApp
                                             usersInRoom.Add(user.GetString());
                                         }
 
-                                        RoomWindow roomWindow = new RoomWindow(roomId);
+                                        if (doc.RootElement.TryGetProperty("PaintLines", out JsonElement linesArray))
+                                        {
+                                            foreach (JsonElement line in linesArray.EnumerateArray())
+                                            {
+                                                uint x1 = line.GetProperty("start").GetProperty("x").GetUInt32();
+                                                uint y1 = line.GetProperty("start").GetProperty("y").GetUInt32();
+
+                                                uint x2 = line.GetProperty("end").GetProperty("x").GetUInt32();
+                                                uint y2 = line.GetProperty("end").GetProperty("y").GetUInt32();
+
+                                                string color = line.GetProperty("color").GetString();
+
+                                                LineData newLine = new LineData(new Coordinates(x1, y1), new Coordinates(x2, y2), color);
+
+                                                paintLines.Add(newLine);
+                                            }
+                                        }
+
+                                        RoomWindow roomWindow = new RoomWindow(roomId, paintLines);
                                         roomWindow.Show();
                                         var oldWindow = Application.Current.Windows.OfType<JoinRoomWindow>().FirstOrDefault();
                                         if (oldWindow != null)

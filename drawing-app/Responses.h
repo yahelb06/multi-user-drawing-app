@@ -52,6 +52,7 @@ struct AcceptUserResponse
 	unsigned int status;
 	std::string roomId;
 	std::vector<std::string> usersInRoom;
+	std::vector<Line> vecLines;
 };
 
 struct RemoveUserFromRoomResponse
@@ -84,10 +85,10 @@ struct AddLinesToPaintResponse
 	unsigned int status;
 };
 
-struct GetPaintFromRoomResponse
+/*struct GetPaintFromRoomResponse
 {
 	std::vector<Line> vecLines;
-};
+};*/
 
 struct GetNewLinesResponse
 {

@@ -19,13 +19,8 @@ Server::~Server()
 {
 	try
 	{
-		// the only use of the destructor should be for freeing 
-		// resources that was allocated in the constructor
 		closesocket(_serverSocket);
-		for (auto& item : m_client)
-		{
-			delete item.second;
-		}
+		m_client.clear();
 		WSACleanup();
 	}
 	catch (...) {}
@@ -40,16 +35,6 @@ void Server::startHandleRequest()
 		// and add then to the list of handlers
 		std::cout << "Waiting for client connection request" << std::endl;
 		handleNewClient();
-	}
-}
-
-void Server::updateClientHandler(SOCKET clientSocket, IRequestHandler* newHandler)
-{
-	std::lock_guard<std::mutex> lock(userListMutex);
-	if (m_client.find(clientSocket) != m_client.end())
-	{
-		//delete m_client[clientSocket];
-		m_client[clientSocket] = newHandler;
 	}
 }
 
@@ -82,9 +67,9 @@ void Server::handleNewClient()
 	std::cout << "Client accepted. Server and client can speak" << std::endl;
 	{
 		std::lock_guard<std::mutex> lock(userListMutex);
-		this->m_client[client_socket] = m_handlerFactory.CreateLoginRequest();
+		this->m_client[client_socket] = std::unique_ptr<IRequestHandler>(m_handlerFactory.CreateLoginRequest());
 	}
-	// the function that handle the conversation with the client
+
 	std::thread t(&Server::clientHandler, this, client_socket);
 	t.detach();
 }
@@ -101,6 +86,11 @@ void Server::clientHandler(SOCKET clientSocket)
 		{
 			char header[7];
 			int bytesRead = 0;
+			IRequestHandler* pendingHandler = checkAndApplyPendingHandler(clientSocket);
+			if (pendingHandler != nullptr)
+			{
+				currentHandler = pendingHandler;
+			}
 
 			while (bytesRead < 7)
 			{
@@ -138,9 +128,10 @@ void Server::clientHandler(SOCKET clientSocket)
 			RequestInfo info = { messageCode, time_t(), vecBuffer, clientSocket };
 			{
 				std::lock_guard<std::mutex> lock(userListMutex);
-				if (m_client.find(clientSocket) != m_client.end())
+				auto it = m_client.find(clientSocket);
+				if (it != m_client.end())
 				{
-					currentHandler = m_client[clientSocket];
+					currentHandler = it->second.get();
 				}
 			}
 			if (currentHandler == nullptr)
@@ -151,11 +142,14 @@ void Server::clientHandler(SOCKET clientSocket)
 			if (res.newHandler != currentHandler)
 			{
 				std::lock_guard<std::mutex> lock(userListMutex);
-
-				if (m_client.find(clientSocket) != m_client.end())
+				auto it = m_client.find(clientSocket);
+				if (it != m_client.end())
 				{
-					delete currentHandler;
-					this->m_client[clientSocket] = res.newHandler;
+					it->second.reset(res.newHandler);
+				}
+				else
+				{
+					delete res.newHandler;
 				}
 			}
 			for (auto& ch : res.response)
@@ -191,7 +185,6 @@ void Server::clientHandler(SOCKET clientSocket)
 		auto it = m_client.find(clientSocket);
 		if (it != m_client.end())
 		{
-			delete it->second;
 			m_client.erase(it);
 		}
 	}
@@ -212,3 +205,23 @@ bool Server::sendAll(SOCKET socket, const char* data, int length)
 	return true;
 }
 
+void Server::setPendingHandler(SOCKET clientSocket, IRequestHandler* newHandler)
+{
+	std::lock_guard<std::mutex> lock(userListMutex);
+	m_pendingClients[clientSocket] = std::unique_ptr<IRequestHandler>(newHandler);
+}
+
+IRequestHandler* Server::checkAndApplyPendingHandler(SOCKET clientSocket)
+{
+	std::lock_guard<std::mutex> lock(userListMutex);
+
+	auto pendingIt = m_pendingClients.find(clientSocket);
+	if (pendingIt != m_pendingClients.end())
+	{
+		m_client[clientSocket] = std::move(pendingIt->second);
+		m_pendingClients.erase(pendingIt);
+
+		return m_client[clientSocket].get();
+	}
+	return nullptr;
+}

@@ -13,63 +13,14 @@ namespace DrawingApp
     {
         private List<LineData> _lines;
         private string _roomId;
-        public RoomWindow(string roomId)
+        public RoomWindow(string roomId, List<LineData> lines)
         {
             InitializeComponent();
             _roomId = roomId;
-            if (_lines == null) _lines = new List<LineData>();
-
-            getPaintFromRoom();
+            _lines = lines;
 
             RoomIdTextBlock.Text = roomId;
-        }
-
-        private async Task getPaintFromRoom()
-        {
-            try
-            {
-                var data = new { roomId = _roomId };
-                string jsonString = JsonSerializer.Serialize(data);
-                byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
-
-                byte[] packet = new byte[1 + 6 + jsonBytes.Length];
-                packet[0] = (byte)LoginWindow.MessageCode.GET_PAINT_FROM_ROOM;
-
-                string lengthStr = jsonBytes.Length.ToString("D6");
-                byte[] messageSize = Encoding.UTF8.GetBytes(lengthStr);
-                Array.Copy(messageSize, 0, packet, 1, 6);
-                Array.Copy(jsonBytes, 0, packet, 7, jsonBytes.Length);
-
-                byte[] response = await networkManager.SendAndReceiveAsync(packet);
-                
-                List<LineData> newLines = new List<LineData>();
-                string jsonStr = Encoding.UTF8.GetString(response).TrimEnd('\0');
-                using (JsonDocument doc = JsonDocument.Parse(jsonStr))
-                {
-                    if (doc.RootElement.TryGetProperty("PaintLines", out JsonElement linesArray))
-                    {
-                        foreach (JsonElement line in linesArray.EnumerateArray())
-                        {
-                            uint x1 = line.GetProperty("start").GetProperty("x").GetUInt32();
-                            uint y1 = line.GetProperty("start").GetProperty("y").GetUInt32();
-
-                            uint x2 = line.GetProperty("end").GetProperty("x").GetUInt32();
-                            uint y2 = line.GetProperty("end").GetProperty("y").GetUInt32();
-
-                            string color = line.GetProperty("color").GetString();
-
-                            LineData newLine = new LineData(new Coordinates(x1, y1), new Coordinates(x2, y2), color);
-
-                            newLines.Add(newLine);
-                        }
-                    }
-                    AddLinesToCanvas(newLines);
-                }
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
+            AddLinesToCanvas(_lines);
         }
         public void AddLinesToCanvas(List<LineData> newLines)
         {

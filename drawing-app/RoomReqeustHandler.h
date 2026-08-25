@@ -28,7 +28,7 @@ private:
 	RequestResult GetUserPaintsName(const RequestInfo& info);
 	RequestResult GetPaintByName(const RequestInfo& info);
 	RequestResult UploadPaintToRoom(const RequestInfo& info);
-	RequestResult GetPaintFromRoom(const RequestInfo& info);
+	//RequestResult GetPaintFromRoom(const RequestInfo& info);
 	RequestResult SavePaint(const RequestInfo& info);
 
 	RequestHandlerFactory& m_handlerFactory;

@@ -12,9 +12,10 @@ public:
 	Server(RequestHandlerFactory& factory);
 	~Server();
 	void startHandleRequest();
-
-	void updateClientHandler(SOCKET clientSocket, IRequestHandler* newHandler);
 	static bool sendAll(SOCKET socket, const char* data, int length);
+
+	void setPendingHandler(SOCKET clientSocket, IRequestHandler* newHandler);
+	IRequestHandler* checkAndApplyPendingHandler(SOCKET clientSocket);
 
 private:
 	
@@ -25,6 +26,8 @@ private:
 	RequestHandlerFactory& m_handlerFactory;
 	std::mutex userListMutex;
 
-	std::map<SOCKET, IRequestHandler*> m_client;
+	std::map<SOCKET, std::unique_ptr<IRequestHandler>> m_client;
 	SOCKET _serverSocket;
+
+	std::map<SOCKET, std::unique_ptr<IRequestHandler>> m_pendingClients;
 };

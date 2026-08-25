@@ -69,10 +69,10 @@ RequestResult RoomRequestHandler::handlerRequest(RequestInfo& info)
 	{
 		return UploadPaintToRoom(info);
 	}
-	else if (code == MessageCode::GET_PAINT_FROM_ROOM)
+	/*else if (code == MessageCode::GET_PAINT_FROM_ROOM)
 	{
 		return GetPaintFromRoom(info);
-	}
+	}*/
 	else if (code == MessageCode::SAVE_PAINT)
 	{
 		return SavePaint(info);
@@ -99,9 +99,11 @@ RequestResult RoomRequestHandler::AddUser(const RequestInfo& info)
 		res.newHandler = this;
 
 		AcceptUserResponse accept;
+		accept.vecLines = this->m_handlerFactory.getRoomManager().GetPaintFromRoom(req.roomId);
 		accept.status = 1;
 		accept.roomId = req.roomId;
 		accept.usersInRoom = this->m_handlerFactory.getRoomManager().getUsersInRoom(accept.roomId);
+
 		Buffer userAddRes = JsonResponsePacketSerializer::serializeResponse(accept);
 		if (!sendMsgToSingleUser(userAddRes, req.roomId, userToAdd, this->m_handlerFactory.CreateRoomRequest()))
 		{
@@ -109,7 +111,7 @@ RequestResult RoomRequestHandler::AddUser(const RequestInfo& info)
 		}
 		else
 		{
-			this->m_handlerFactory.getServer()->updateClientHandler(userToAddSocket, this->m_handlerFactory.CreateRoomRequest());
+			this->m_handlerFactory.getServer()->setPendingHandler(userToAddSocket, this->m_handlerFactory.CreateRoomRequest());
 		}
 	}
 	else if (status == AddUserStatus::USER_ISNT_THE_MANAGER || showErr)
@@ -248,7 +250,7 @@ RequestResult RoomRequestHandler::AddLineToPaint(const RequestInfo& info)
 		GetNewLinesResponse newLines;
 		newLines.newLines = req.linesToAdd;
 		Buffer otherPlayerRes = JsonResponsePacketSerializer::serializeResponse(newLines);
-		if (!SendMsgToAllUsersInRoom(otherPlayerRes, req.roomId, this))
+		if (!SendMsgToAllUsersInRoom(otherPlayerRes, req.roomId, nullptr))
 		{
 			showErr = true;
 		}
@@ -315,7 +317,7 @@ RequestResult RoomRequestHandler::GetPaintByName(const RequestInfo& info)
 	}
 }
 
-RequestResult RoomRequestHandler::GetPaintFromRoom(const RequestInfo& info)
+/*RequestResult RoomRequestHandler::GetPaintFromRoom(const RequestInfo& info)
 {
 	RequestResult res;
 
@@ -338,7 +340,7 @@ RequestResult RoomRequestHandler::GetPaintFromRoom(const RequestInfo& info)
 		res.newHandler = this;
 		return res;
 	}
-}
+}*/
 
 RequestResult RoomRequestHandler::SavePaint(const RequestInfo& info)
 {
@@ -391,9 +393,15 @@ bool RoomRequestHandler::sendMsgToSingleUser(const Buffer& res, const std::strin
 		SOCKET playerSocket = this->m_handlerFactory.getLoginManager().getSocketByUsername(user.getUserName());
 		if (playerSocket == INVALID_SOCKET)
 		{
+			delete handler; 
 			return false;
 		}
-		this->m_handlerFactory.getServer()->updateClientHandler(playerSocket, handler);
+		this->m_handlerFactory.getServer()->setPendingHandler(playerSocket, handler);
+		for (auto c : res)
+		{
+			std::cout << c;
+		}
+		std::cout << "\n";
 		if (!Server::sendAll(playerSocket, reinterpret_cast<const char*>(res.data()), res.size()))
 		{
 			std::cout << "Failed to send message to user: " << user.getUserName() << ", closing socket." << std::endl;
@@ -420,7 +428,10 @@ bool RoomRequestHandler::SendMsgToAllUsersInRoom(const Buffer& res, const std::s
 			{
 				return false;
 			}
-			this->m_handlerFactory.getServer()->updateClientHandler(playerSocket, handler);
+			if (handler != nullptr)
+			{
+				this->m_handlerFactory.getServer()->setPendingHandler(playerSocket, handler);
+			}
 			if (!Server::sendAll(playerSocket, reinterpret_cast<const char*>(res.data()), res.size()))
 			{
 				std::cout << "Failed to send message to player: " << player << ", closing socket." << std::endl;

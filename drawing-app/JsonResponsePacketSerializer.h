@@ -28,7 +28,7 @@ public:
 	static Buffer serializeResponse(GetUsersInRoomResponse& res);
 	static Buffer serializeResponse(GetUserPaintsNameResponse& res);
 	static Buffer serializeResponse(AddLinesToPaintResponse& res);
-	static Buffer serializeResponse(GetPaintFromRoomResponse& res);
+	//static Buffer serializeResponse(GetPaintFromRoomResponse& res);
 	static Buffer serializeResponse(GetNewLinesResponse& res);
 	static Buffer serializeResponse(SavePaintResponse& res);
 

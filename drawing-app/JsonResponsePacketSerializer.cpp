@@ -127,6 +127,7 @@ Buffer JsonResponsePacketSerializer::serializeResponse(AcceptUserResponse& res)
     data["Status"] = res.status;
     data["RoomId"] = res.roomId;
     data["UsersInRoom"] = res.usersInRoom;
+    data["PaintLines"] = getLinesVec(res.vecLines);
     std::string jsonStr = data.dump();
     getSizeIntoBuffer(jsonStr.length(), buffer);
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
@@ -205,7 +206,7 @@ Buffer JsonResponsePacketSerializer::serializeResponse(AddLinesToPaintResponse& 
     return buffer;
 }
 
-Buffer JsonResponsePacketSerializer::serializeResponse(GetPaintFromRoomResponse& res)
+/*Buffer JsonResponsePacketSerializer::serializeResponse(GetPaintFromRoomResponse& res)
 {
     Buffer buffer;
     buffer.push_back(static_cast<unsigned char>(MessageCode::GET_PAINT_FROM_ROOM));
@@ -215,7 +216,7 @@ Buffer JsonResponsePacketSerializer::serializeResponse(GetPaintFromRoomResponse&
     getSizeIntoBuffer(jsonStr.length(), buffer);
     buffer.insert(buffer.end(), jsonStr.begin(), jsonStr.end());
     return buffer;
-}
+}*/
 
 Buffer JsonResponsePacketSerializer::serializeResponse(GetNewLinesResponse& res)
 {
